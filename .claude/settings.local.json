@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf apps/docs)",
+      "Bash(mkdir -p apps/api/src/routes apps/api/src/services apps/api/src/lib packages/shared/src/types packages/shared/src/utils packages/shared/src/constants packages/shared/src/ui)",
+      "Bash(pnpm install *)"
+    ]
+  }
+}

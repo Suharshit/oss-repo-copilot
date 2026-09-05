@@ -1,0 +1,8 @@
+node_modules
+.next
+.turbo
+dist
+pnpm-lock.yaml
+
+# Leftover create-turbo clone — not part of this workspace
+.turbo-clone-temp
