@@ -78,6 +78,23 @@ Every table is deny-all: RLS on with zero policies, and no grants to `anon` or
 `check-types` and `build` on every push and pull request. The pnpm version comes
 from the `packageManager` field, so CI and local development cannot drift.
 
+## Testing the API
+
+There is no test suite yet. The API is exercised by hand — a Postman collection
+covering every route and its error cases lives outside the repo (`postman/` is
+gitignored), or with curl:
+
+```sh
+pnpm dev --filter=api
+curl localhost:3001/health
+curl "localhost:3001/v1/issues?url=https://github.com/honojs/hono"
+```
+
+`POST /v1/overview` and `POST /v1/brief` are expected to fail with 500 — the
+routes are real but `services/llm.ts` is still a stub. The overview route does
+its full GitHub read first and logs a summary line, which is how you confirm the
+content fetchers work.
+
 ## Deployment
 
 Not deployed yet.
