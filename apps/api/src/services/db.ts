@@ -1,5 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Repo, RepoModule, RepoOverview } from "@repo/shared/types";
+import type {
+  Repo,
+  RepoConventions,
+  RepoModule,
+  RepoOverview,
+} from "@repo/shared/types";
 import { env } from "../env.js";
 
 /**
@@ -19,6 +24,14 @@ import { env } from "../env.js";
 
 interface RepoRow {
   id: number;
+}
+
+interface ConventionsRow {
+  branch_naming: string | null;
+  test_requirements: string | null;
+  lint_rules: string | null;
+  pr_template: string | null;
+  sources: string[] | null;
 }
 
 interface OverviewRow {
@@ -181,6 +194,85 @@ export async function writeOverview(
   if (error) {
     console.error(
       `cache: could not write overview for ${overview.repoId}:`,
+      error.message,
+    );
+  }
+}
+
+/**
+ * The cached conventions for a repo, or null on a miss (US-4).
+ *
+ * Same lifecycle as the overview — one row per repo, same TTL — because they
+ * are read out of the same fetch and go stale together.
+ */
+export async function readConventions(
+  repoRowId: number,
+  repoId: string,
+): Promise<RepoConventions | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("repo_conventions")
+    .select(
+      "branch_naming, test_requirements, lint_rules, pr_template, sources",
+    )
+    .eq("repo_id", repoRowId)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle<ConventionsRow>();
+
+  if (error) {
+    console.error(
+      `cache: could not read conventions for ${repoId}:`,
+      error.message,
+    );
+    return null;
+  }
+  if (!data) return null;
+
+  return {
+    repoId,
+    branchNaming: data.branch_naming,
+    testRequirements: data.test_requirements,
+    lintRules: data.lint_rules,
+    prTemplate: data.pr_template,
+    sources: data.sources ?? [],
+  };
+}
+
+/**
+ * Store freshly extracted conventions.
+ *
+ * `expiresAt` is passed in rather than computed here so the conventions row
+ * and the overview row written in the same request expire together — a repo
+ * whose overview is stale has almost certainly moved its docs too.
+ */
+export async function writeConventions(
+  repoRowId: number,
+  conventions: RepoConventions,
+  generatedAt: string,
+  expiresAt: string,
+): Promise<void> {
+  const supabase = getClient();
+  if (!supabase) return;
+
+  const { error } = await supabase.from("repo_conventions").upsert(
+    {
+      repo_id: repoRowId,
+      branch_naming: conventions.branchNaming,
+      test_requirements: conventions.testRequirements,
+      lint_rules: conventions.lintRules,
+      pr_template: conventions.prTemplate,
+      sources: conventions.sources,
+      generated_at: generatedAt,
+      expires_at: expiresAt,
+    },
+    { onConflict: "repo_id" },
+  );
+
+  if (error) {
+    console.error(
+      `cache: could not write conventions for ${conventions.repoId}:`,
       error.message,
     );
   }

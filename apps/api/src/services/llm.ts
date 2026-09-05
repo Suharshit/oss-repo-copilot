@@ -4,16 +4,18 @@ import type {
   Issue,
   RelevantFile,
   Repo,
+  RepoConventions,
   RepoModule,
   RepoOverview,
 } from "@repo/shared/types";
 import { env } from "../env.js";
 import { HttpError } from "../lib/errors.js";
 
-/** Generation boundary. Both calls go to Gemini with a structured schema. */
+/** Generation boundary. Every call goes to Gemini with a structured schema. */
 export interface GenerationService {
   generateOverview(input: OverviewInput): Promise<RepoOverview>;
   generateBrief(input: BriefInput): Promise<ContributionBrief>;
+  generateConventions(input: ConventionsInput): Promise<RepoConventions>;
 }
 
 export interface OverviewInput {
@@ -31,6 +33,12 @@ export interface BriefInput {
   contributing: string | null;
 }
 
+export interface ConventionsInput {
+  repo: Repo;
+  /** Contribution docs keyed by repo-relative path, from fetchRepoContext. */
+  docs: Record<string, string>;
+}
+
 /**
  * Prompt budget. The model's context window is far larger than this, but every
  * token is paid for on each cache miss, and a 2000-path tree is mostly noise
@@ -42,6 +50,7 @@ const PROMPT_LIMITS = {
   treePaths: 800,
   issueBodyChars: 6_000,
   contributingChars: 6_000,
+  docChars: 8_000,
 } as const;
 
 // The v1beta Schema type enum is uppercase over REST.
@@ -130,6 +139,48 @@ interface BriefPayload {
   conventionsNotes: string;
 }
 
+// Every field is nullable on purpose. Most repos document some of this and
+// none of them document all of it, and a plausible invented rule is worse than
+// an honest gap — a contributor cannot tell that "branches are named
+// feat/<issue>" was never written down anywhere.
+const CONVENTIONS_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    branchNaming: {
+      type: "STRING",
+      nullable: true,
+      description:
+        "The branch naming rule, quoted or closely paraphrased. Null if the docs do not state one.",
+    },
+    testRequirements: {
+      type: "STRING",
+      nullable: true,
+      description:
+        "What the repo expects of tests before a PR is accepted. Null if unstated.",
+    },
+    lintRules: {
+      type: "STRING",
+      nullable: true,
+      description:
+        "Formatting and lint expectations, including the command to run. Null if unstated.",
+    },
+    prTemplate: {
+      type: "STRING",
+      nullable: true,
+      description:
+        "What the PR description must contain. Null if there is no template or checklist.",
+    },
+  },
+  required: ["branchNaming", "testRequirements", "lintRules", "prTemplate"],
+} as const;
+
+interface ConventionsPayload {
+  branchNaming: string | null;
+  testRequirements: string | null;
+  lintRules: string | null;
+  prTemplate: string | null;
+}
+
 export const generationService: GenerationService = {
   async generateOverview(input): Promise<RepoOverview> {
     const payload = await generate<OverviewPayload>(
@@ -168,7 +219,40 @@ export const generationService: GenerationService = {
       generatedAt: new Date().toISOString(),
     };
   },
+
+  async generateConventions(input): Promise<RepoConventions> {
+    const payload = await generate<ConventionsPayload>(
+      buildConventionsPrompt(input),
+      CONVENTIONS_SCHEMA,
+    );
+
+    return {
+      repoId: input.repo.id,
+      branchNaming: blankToNull(payload.branchNaming),
+      testRequirements: blankToNull(payload.testRequirements),
+      lintRules: blankToNull(payload.lintRules),
+      prTemplate: blankToNull(payload.prTemplate),
+      // Taken from what we actually read, not from the model — the sources are
+      // a fact about the fetch, and asking for them invites invented filenames.
+      sources: Object.keys(input.docs),
+    };
+  },
 };
+
+/**
+ * The model answers "not stated" in prose about as often as it returns null,
+ * and an empty string reads as a real value downstream. Both collapse to null.
+ */
+function blankToNull(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return /^(none|n\/a|not (stated|specified|documented|mentioned))\.?$/i.test(
+    trimmed,
+  )
+    ? null
+    : trimmed;
+}
 
 // ---------------------------------------------------------------------------
 // Prompt construction.
@@ -252,6 +336,24 @@ function buildBriefPrompt(input: BriefInput): string {
     `## File tree (${paths.length} of ${fileTree.length} paths)`,
     paths.join("\n"),
   );
+
+  return sections.join("\n");
+}
+
+function buildConventionsPrompt(input: ConventionsInput): string {
+  const { repo, docs } = input;
+
+  const sections = [
+    "You are extracting a repository's contribution rules for someone about to open their first pull request against it.",
+    "Report only rules the documents below actually state. Where a document is silent on a field, return null for it — do not infer the rule from what similar projects usually do, and do not restate a general best practice as if this repo had asked for it.",
+    "",
+    "## Repository",
+    `${repo.owner}/${repo.name}`,
+  ];
+
+  for (const [path, content] of Object.entries(docs)) {
+    sections.push("", `## ${path}`, truncate(content, PROMPT_LIMITS.docChars));
+  }
 
   return sections.join("\n");
 }
