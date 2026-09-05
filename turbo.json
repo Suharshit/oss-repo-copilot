@@ -10,6 +10,8 @@
         "NEXT_PUBLIC_API_URL",
         "GITHUB_TOKEN",
         "ANTHROPIC_API_KEY",
+        "SUPABASE_URL",
+        "SUPABASE_SECRET_KEY",
         "CORS_ORIGINS",
         "PORT"
       ],

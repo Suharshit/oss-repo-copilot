@@ -1,0 +1,10 @@
+-- Seed data for local development (`supabase db reset` runs this).
+--
+-- Intentionally empty for the MVP. There is nothing to seed:
+--   * There are no users (v1 is stateless per visit — spec §3).
+--   * Every table is a cache of GitHub data or generated artifacts, populated
+--     at runtime by apps/api on the first request for a repo.
+--
+-- If you want local fixtures to work on the frontend without burning GitHub
+-- API calls or LLM tokens, add a repo + overview + a few issues here rather
+-- than pointing dev at the remote database.
