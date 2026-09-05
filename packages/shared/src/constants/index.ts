@@ -50,3 +50,16 @@ export const DOC_FILES = [
 
 /** Cap on how many issues we score and return for one repo. */
 export const MAX_ISSUES_PER_REPO = 50;
+
+/**
+ * Caps on what one repo can contribute to a generation request. Large repos
+ * would otherwise blow past the LLM's context window and cost, and the file
+ * tree of a monorepo is mostly noise past the first couple of thousand paths.
+ */
+export const MAX_TREE_ENTRIES = 2_000;
+
+/** Characters read from any single file; the rest is truncated away. */
+export const MAX_FILE_CHARS = 40_000;
+
+/** Manifests are matched by basename, so a monorepo can match many. */
+export const MAX_MANIFEST_FILES = 10;

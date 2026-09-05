@@ -1,5 +1,16 @@
 import { DEFAULT_API_PORT, DEFAULT_WEB_PORT } from "@repo/shared/constants";
 
+// Nothing else loads these: there is no dotenv dependency and neither `tsx`
+// nor `node` reads .env on its own. In production the host supplies the
+// environment and these files are absent, which is why a miss is ignored.
+for (const file of [".env.local", ".env"]) {
+  try {
+    process.loadEnvFile(file);
+  } catch {
+    // Not present — fall through to whatever the process was given.
+  }
+}
+
 /**
  * Read once at boot and fail loudly, so a missing token surfaces on startup
  * rather than on the first user request.
