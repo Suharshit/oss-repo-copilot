@@ -37,6 +37,13 @@ export interface Env {
   supabaseSecretKey: string | undefined;
   /** Origins allowed to call this API. */
   corsOrigins: string[];
+  /**
+   * Whether X-Forwarded-For can be believed when identifying a caller for
+   * rate limiting. Only true behind a proxy that sets it: anywhere else the
+   * header is attacker-controlled and would hand out a fresh limit per
+   * request. See apps/api/src/lib/rate-limit.ts.
+   */
+  trustProxy: boolean;
 }
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
@@ -54,6 +61,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean),
+    trustProxy: source.TRUST_PROXY === "1",
   };
 }
 
