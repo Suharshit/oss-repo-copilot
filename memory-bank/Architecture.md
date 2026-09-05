@@ -14,6 +14,10 @@ repo-onboarding-copilot/
 │   ├── shared/              @repo/shared — the contract between the apps
 │   ├── eslint-config/       @repo/eslint-config
 │   └── typescript-config/   @repo/typescript-config
+├── supabase/
+│   ├── config.toml          local stack config, trimmed to MVP scope
+│   ├── migrations/          imperative migrations (not declarative schemas)
+│   └── seed.sql             empty by design — nothing to seed in v1
 ├── turbo.json               task graph
 ├── spec.md                  MVP spec (source of truth for scope)
 └── memory-bank/             this folder
@@ -139,6 +143,47 @@ REPO ──┬── ISSUE ──── CONTRIBUTION_BRIEF
 - `friendlinessScore` is computed at fetch time, not stored truth.
 - There is no `USER` entity. V1 is stateless per visit.
 
+### Physical schema (Supabase / Postgres 17)
+
+Five tables in `public`, all created by
+`supabase/migrations/20260905101420_init_mvp_schema.sql`:
+
+| Table                 | Rows are                     | Cardinality    |
+| --------------------- | ---------------------------- | -------------- |
+| `repos`               | repos we've looked at        | —              |
+| `repo_overviews`      | cached summary (US-1)        | one per repo   |
+| `repo_conventions`    | CONTRIBUTING.md rules (US-4) | one per repo   |
+| `issues`              | open issues + score (US-2)   | many per repo  |
+| `contribution_briefs` | generated briefs (US-3)      | many per issue |
+
+Schema conventions in force:
+
+- **PKs are `bigint generated always as identity`.** The app's string ids
+  (`repoId()` = `"owner/name"`, `issueId()` = `"owner/name#123"`) map to natural
+  keys, not to the PK: `repos.full_name` is a generated stored column
+  (`lower(owner) || '/' || lower(name)`) with a unique index, and issues are
+  unique on `(repo_id, number)`. Mapping happens at the service boundary, like
+  the existing snake_case → camelCase mapping in `toIssue`.
+- `timestamptz` everywhere, `text` over `varchar(n)`, arrays for label lists,
+  `jsonb` for the structured LLM output (`main_modules`, `relevant_files`).
+- Unique indexes on `repo_overviews.repo_id` and `repo_conventions.repo_id`
+  exist so the cache write is a single `on conflict (repo_id) do update` upsert.
+- `issues_ranked_idx` is a **partial** index covering exactly the US-2 query:
+  `(repo_id, friendliness_score desc) where state = 'open'`.
+- All FKs `on delete cascade` from `repos`, so dropping a repo drops everything
+  derived from it. Every FK column is index-covered.
+- `set_updated_at()` is a `SECURITY INVOKER` trigger function with
+  `search_path = ''`; only `repos` carries `updated_at`.
+
+**Access model — no policies is the design, not an oversight.** The browser
+never talks to Supabase; the only client is `apps/api` using the secret
+(service role) key, which bypasses RLS. So every table has RLS enabled with
+**zero policies**, and `anon`/`authenticated` have had all grants revoked. Two
+independent locks: no grant, and no policy even if a grant reappears.
+`auto_expose_new_tables = false` in `config.toml` keeps future tables the same
+way. The security advisor's five `rls_enabled_no_policy` INFO notices are the
+expected output of this design.
+
 ## Dependency graph
 
 ```
@@ -187,10 +232,32 @@ Turbo task graph (`turbo.json`): `build` depends on `^build`; outputs are
 | ------------------- | -------------------------------- | ------------------------------ |
 | GitHub REST API     | repo metadata, file tree, issues | one server-side `GITHUB_TOKEN` |
 | Anthropic API       | overviews + contribution briefs  | `ANTHROPIC_API_KEY`            |
-| Postgres (Supabase) | cached overviews and briefs      | not yet wired                  |
+| Postgres (Supabase) | cached overviews and briefs      | `SUPABASE_SECRET_KEY`          |
 
 All three are server-side only. The browser never holds a key, and end users
 never authenticate.
+
+### Supabase
+
+Project **OSS-Repo-Copilot** (`bvibmfdyxpsevfiukrqa`), Postgres 17, region
+ap-southeast-2. `config.toml` pins `major_version = 17` to match.
+
+Only `api`, `db` and `studio` are enabled locally. `auth`, `storage`,
+`realtime`, `edge_runtime`, `analytics` and `local_smtp` are switched off
+because v1 has no users, no uploads, no real-time and no Edge Functions — each
+one is annotated in `config.toml` with the decision that rules it out.
+
+Workflow is **imperative migrations** (`supabase/migrations/`), not declarative
+schemas — `db.migrations.schema_paths` is empty. Create migrations with
+`pnpm db:migration <name>`; never hand-write a filename.
+
+| Command             | What it does                                   |
+| ------------------- | ---------------------------------------------- |
+| `pnpm db:start`     | local stack (needs Docker — not installed yet) |
+| `pnpm db:reset`     | re-run every migration + `seed.sql`            |
+| `pnpm db:migration` | new timestamped migration file                 |
+| `pnpm db:push`      | apply pending migrations to the remote         |
+| `pnpm db:diff`      | diff the local DB against migrations           |
 
 ### Not yet built
 

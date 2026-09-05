@@ -60,3 +60,40 @@ pnpm dev --filter=api
 | `pnpm format`      | Prettier                                         |
 
 Requires Node >= 24 and pnpm 11.
+
+## Database
+
+Supabase, remote only — there is no local stack, because `supabase start` and
+`supabase db diff` both need Docker. Schema lives in
+[supabase/migrations/](./supabase/migrations/) and is applied with `pnpm db:push`;
+`pnpm exec supabase migration list` shows local vs. remote state.
+
+Every table is deny-all: RLS on with zero policies, and no grants to `anon` or
+`authenticated`. `apps/api` is the only client and connects with the secret
+(service-role) key. The browser never talks to Supabase.
+
+## CI
+
+[.github/workflows/ci.yml](./.github/workflows/ci.yml) runs `lint`,
+`check-types` and `build` on every push and pull request. The pnpm version comes
+from the `packageManager` field, so CI and local development cannot drift.
+
+## Deployment
+
+Not deployed yet.
+
+**`apps/web` → Vercel.** Create the project from the dashboard (first-time
+creation and env var entry need a login), pointing it at this repo with:
+
+| Setting          | Value                                                      |
+| ---------------- | ---------------------------------------------------------- |
+| Root Directory   | `apps/web`                                                 |
+| Framework Preset | Next.js                                                    |
+| Install Command  | default (Vercel reads `packageManager`)                    |
+| Build Command    | default (`next build`)                                     |
+| Env vars         | `NEXT_PUBLIC_API_URL` — see [.env.example](./.env.example) |
+
+**`apps/api` → undecided (OQ-4).** Hono runs on Node, Vercel functions and
+Workers alike, and no handler is committed for any of them. Serverless is fine
+for what exists today, but repo cloning and indexing may outgrow function
+execution limits — so the choice stays open until that work lands.

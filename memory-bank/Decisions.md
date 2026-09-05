@@ -179,6 +179,99 @@ components were folded into `packages/shared/src/ui` (D-10).
 
 ---
 
+## Database decisions (Supabase setup, 2026-09-05)
+
+### D-16 — Imperative migrations, not declarative schemas
+
+**Status:** accepted
+
+`supabase/migrations/` with timestamped SQL files; `db.migrations.schema_paths`
+left empty. The schema is small and mostly write-once, so the extra indirection
+of declarative schemas buys nothing yet, and a plain migration file is easier to
+read as a record of intent.
+
+Always create files with `pnpm db:migration <name>` — never hand-write a
+timestamp.
+
+### D-17 — Local stack trimmed to `api`, `db`, `studio`
+
+**Status:** accepted
+
+`auth`, `storage`, `realtime`, `edge_runtime`, `analytics` and `local_smtp` are
+disabled in `config.toml`. Each maps to something v1 explicitly does not do:
+no user accounts (D-01), no file storage (D-03), no real-time (D-02), no Edge
+Functions (D-08). Keeps `supabase start` fast and the surface small.
+
+Each disabled block is annotated in `config.toml` with the reason, so nobody
+re-enables one by reflex.
+
+### D-18 — Deny-all RLS with zero policies, and no Data API grants
+
+**Status:** accepted
+
+Every table has RLS enabled and **no policies**, plus all grants revoked from
+`anon` and `authenticated`. `auto_expose_new_tables = false`.
+
+The usual Supabase pattern (policies keyed on `auth.uid()`) is meaningless here:
+there are no users, and the browser never holds a Supabase key. The only client
+is `apps/api` with the secret/service-role key, which bypasses RLS. So the
+correct policy set is the empty one, and the grant revocation is a second,
+independent lock in case a grant ever reappears.
+
+**Consequence:** the security advisor reports five `rls_enabled_no_policy` INFO
+notices. That is the expected output, not a defect. If a browser ever needs to
+read from Supabase directly, this decision has to be revisited first.
+
+### D-19 — Surrogate `bigint identity` PKs, natural keys as unique indexes
+
+**Status:** accepted
+
+Tables use `bigint generated always as identity` primary keys, with the app's
+string identifiers as unique natural keys alongside: `repos.full_name` is a
+generated stored column (`lower(owner) || '/' || lower(name)`) matching
+`repoId()`, and issues are unique on `(repo_id, number)` matching `issueId()`.
+
+This follows Postgres guidance (compact, sequential, no index fragmentation)
+without forcing a change to `@repo/shared`'s types, which use string ids. The
+mapping happens at the service boundary, consistent with how `toIssue` already
+maps snake_case to camelCase.
+
+Making `full_name` **generated** rather than application-supplied means it can
+never drift from `owner`/`name`, and it makes repo lookup case-insensitive for
+free.
+
+### D-20 — `contribution_briefs` is a record, not a cache
+
+**Status:** accepted
+
+The table exists and stores every generated brief, but nothing reads it on the
+request path — D-06 says briefs are generated fresh per request. It's there to
+evaluate output quality over time.
+
+Noted in the migration itself, because a table that looks like a cache invites
+someone to wire a cache-hit lookup against it.
+
+### D-21 — No auth phase, against the setup doc
+
+**Status:** accepted
+
+`building-context/initial-setup.md` Phase 4 called for Supabase Auth wired end
+to end — `@supabase/ssr`, a `/login` page, and a session-gated `/dashboard`.
+That phase was skipped.
+
+It contradicts three things already settled: spec §3 lists user accounts as a
+non-goal, D-01 rules out end-user auth, and D-17 disables the `auth` service in
+`config.toml`. Building it would have added a user-accounts surface the product
+does not have, and D-18's deny-all RLS assumes no `authenticated` role ever
+reaches the database.
+
+**Consequence:** the setup doc's "sign-up → session → `/dashboard` → sign-out"
+gate is not satisfiable and is not tracked. If v2 ever adds saved history or
+personalization, this decision and D-01 fall together, and D-18 needs revisiting
+in the same change.
+
+---
+
 ## Open questions
 
 Carried from `spec.md` §7 — unresolved, and each one blocks or shapes work.
