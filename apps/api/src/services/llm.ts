@@ -2,6 +2,7 @@ import { GEMINI_API_BASE, overviewExpiry, truncate } from "@repo/shared";
 import type {
   ContributionBrief,
   Issue,
+  RelevantFile,
   Repo,
   RepoModule,
   RepoOverview,
@@ -9,11 +10,7 @@ import type {
 import { env } from "../env.js";
 import { HttpError } from "../lib/errors.js";
 
-/**
- * Generation boundary. Overview is wired to Gemini; brief is still a stub —
- * its route feeds it an empty file tree, so implementing it before that is
- * fixed would produce confident nonsense.
- */
+/** Generation boundary. Both calls go to Gemini with a structured schema. */
 export interface GenerationService {
   generateOverview(input: OverviewInput): Promise<RepoOverview>;
   generateBrief(input: BriefInput): Promise<ContributionBrief>;
@@ -43,6 +40,8 @@ const PROMPT_LIMITS = {
   readmeChars: 8_000,
   manifestChars: 4_000,
   treePaths: 800,
+  issueBodyChars: 6_000,
+  contributingChars: 6_000,
 } as const;
 
 // The v1beta Schema type enum is uppercase over REST.
@@ -87,6 +86,50 @@ interface OverviewPayload {
   mainModules: RepoModule[];
 }
 
+const BRIEF_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    relevantFiles: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          path: {
+            type: "STRING",
+            description:
+              "Real path copied verbatim from the file tree provided. Never invent one.",
+          },
+          reason: {
+            type: "STRING",
+            description:
+              "One sentence on why this file is likely to need changing for this issue.",
+          },
+        },
+        required: ["path", "reason"],
+      },
+      description:
+        "3-8 files, most likely to need changing first. Fewer is better than padded.",
+    },
+    suggestedApproach: {
+      type: "STRING",
+      description:
+        "Plain-language steps a first-time contributor would follow. No code blocks.",
+    },
+    conventionsNotes: {
+      type: "STRING",
+      description:
+        "What this repo expects of a PR (tests, branch naming, lint, sign-off). Say so plainly if the material does not cover it.",
+    },
+  },
+  required: ["relevantFiles", "suggestedApproach", "conventionsNotes"],
+} as const;
+
+interface BriefPayload {
+  relevantFiles: RelevantFile[];
+  suggestedApproach: string;
+  conventionsNotes: string;
+}
+
 export const generationService: GenerationService = {
   async generateOverview(input): Promise<RepoOverview> {
     const payload = await generate<OverviewPayload>(
@@ -108,11 +151,22 @@ export const generationService: GenerationService = {
     };
   },
 
-  async generateBrief() {
-    throw new HttpError(
-      "internal_error",
-      "Brief generation is not wired up yet (see apps/api/src/services/llm.ts).",
+  async generateBrief(input): Promise<ContributionBrief> {
+    const payload = await generate<BriefPayload>(
+      buildBriefPrompt(input),
+      BRIEF_SCHEMA,
     );
+
+    return {
+      id: crypto.randomUUID(),
+      issueId: input.issue.id,
+      // Same guard as the overview: a path the model invented is worse than
+      // no path at all, because a newcomer cannot tell the difference.
+      relevantFiles: keepRealPaths(payload.relevantFiles ?? [], input.fileTree),
+      suggestedApproach: payload.suggestedApproach,
+      conventionsNotes: payload.conventionsNotes,
+      generatedAt: new Date().toISOString(),
+    };
   },
 };
 
@@ -158,11 +212,55 @@ function buildOverviewPrompt(input: OverviewInput): string {
   return sections.join("\n");
 }
 
+function buildBriefPrompt(input: BriefInput): string {
+  const { repo, issue, fileTree, contributing } = input;
+
+  const sections = [
+    "You are helping a first-time contributor work out what to change for one GitHub issue.",
+    "Ground every claim in the material below. Only cite paths that appear in the file tree, copied exactly. If the issue does not say enough to locate the change, say so in the approach rather than guessing.",
+    "",
+    "## Repository",
+    `${repo.owner}/${repo.name}`,
+    `Primary language reported by GitHub: ${repo.primaryLanguage ?? "unknown"}`,
+    "",
+    `## Issue #${issue.number}: ${issue.title}`,
+    `Labels: ${issue.labels.length > 0 ? issue.labels.join(", ") : "none"}`,
+    `State: ${issue.state}`,
+    "",
+    issue.body
+      ? truncate(issue.body, PROMPT_LIMITS.issueBodyChars)
+      : "(The issue has no description.)",
+  ];
+
+  if (contributing) {
+    sections.push(
+      "",
+      "## CONTRIBUTING",
+      truncate(contributing, PROMPT_LIMITS.contributingChars),
+    );
+  } else {
+    sections.push(
+      "",
+      "## CONTRIBUTING",
+      "(This repo has no CONTRIBUTING guide. Do not invent rules for it.)",
+    );
+  }
+
+  const paths = fileTree.slice(0, PROMPT_LIMITS.treePaths);
+  sections.push(
+    "",
+    `## File tree (${paths.length} of ${fileTree.length} paths)`,
+    paths.join("\n"),
+  );
+
+  return sections.join("\n");
+}
+
 /** Drops modules whose path is not in the tree — the model does hallucinate these. */
-function keepRealPaths(
-  modules: RepoModule[],
+function keepRealPaths<T extends { path: string }>(
+  modules: T[],
   fileTree: string[],
-): RepoModule[] {
+): T[] {
   const known = new Set(fileTree);
   const directories = new Set<string>();
   for (const path of fileTree) {
