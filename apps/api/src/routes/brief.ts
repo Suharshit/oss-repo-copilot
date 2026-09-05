@@ -2,7 +2,12 @@ import { Hono } from "hono";
 import { parseIssueUrl } from "@repo/shared/utils";
 import type { BriefRequest, BriefResponse } from "@repo/shared/types";
 import { HttpError, ok } from "../lib/errors.js";
-import { fetchRepo, fetchScoredIssues } from "../services/github.js";
+import {
+  fetchIssue,
+  fetchRepo,
+  fetchRepoContext,
+  selectContributing,
+} from "../services/github.js";
 import { generationService } from "../services/llm.js";
 
 /** POST /v1/brief — relevant files + approach for one issue (US-3). */
@@ -18,18 +23,19 @@ export const briefRoutes = new Hono().post("/", async (c) => {
 
   const repo = await fetchRepo(ref);
 
-  // TODO: fetch the single issue directly instead of scanning the open list.
-  const issues = await fetchScoredIssues(ref);
-  const issue = issues.find((candidate) => candidate.number === ref.number);
-  if (!issue) {
-    throw new HttpError("not_found", `Issue #${ref.number} was not found.`);
-  }
+  // The issue is fetched by number rather than scanned out of the open list:
+  // that list is capped, excludes closed issues, and drops PRs silently.
+  // fetchIssue finds closed issues and says plainly when the URL is a PR.
+  const [issue, context] = await Promise.all([
+    fetchIssue(ref, ref.number),
+    fetchRepoContext(ref, repo.defaultBranch),
+  ]);
 
   const brief = await generationService.generateBrief({
     repo,
     issue,
-    fileTree: [],
-    contributing: null,
+    fileTree: context.fileTree,
+    contributing: selectContributing(context.docs),
   });
 
   const response: BriefResponse = { repo, issue, brief };
