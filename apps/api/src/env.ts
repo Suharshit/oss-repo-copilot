@@ -1,4 +1,8 @@
-import { DEFAULT_API_PORT, DEFAULT_WEB_PORT } from "@repo/shared/constants";
+import {
+  DEFAULT_API_PORT,
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_WEB_PORT,
+} from "@repo/shared/constants";
 
 // Nothing else loads these: there is no dotenv dependency and neither `tsx`
 // nor `node` reads .env on its own. In production the host supplies the
@@ -20,7 +24,9 @@ export interface Env {
   port: number;
   /** Server-side GitHub token — end users never authenticate (spec §6). */
   githubToken: string | undefined;
-  anthropicApiKey: string | undefined;
+  geminiApiKey: string | undefined;
+  /** Gemini model id, e.g. `gemini-2.5-flash`. */
+  model: string;
   /**
    * Supabase, used as the cache for generated overviews and briefs.
    * The secret (service role) key bypasses RLS — every table is deny-all for
@@ -40,7 +46,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     nodeEnv,
     port: Number(source.PORT ?? DEFAULT_API_PORT),
     githubToken: source.GITHUB_TOKEN,
-    anthropicApiKey: source.ANTHROPIC_API_KEY,
+    geminiApiKey: source.GEMINI_API_KEY,
+    model: source.MODEL ?? DEFAULT_GEMINI_MODEL,
     supabaseUrl: source.SUPABASE_URL,
     supabaseSecretKey: source.SUPABASE_SECRET_KEY,
     corsOrigins: (source.CORS_ORIGINS ?? `http://localhost:${DEFAULT_WEB_PORT}`)

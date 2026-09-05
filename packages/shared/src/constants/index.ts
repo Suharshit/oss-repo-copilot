@@ -63,3 +63,9 @@ export const MAX_FILE_CHARS = 40_000;
 
 /** Manifests are matched by basename, so a monorepo can match many. */
 export const MAX_MANIFEST_FILES = 10;
+
+/** Gemini model used for both generation calls; override with MODEL. */
+export const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
+
+export const GEMINI_API_BASE =
+  "https://generativelanguage.googleapis.com/v1beta";
