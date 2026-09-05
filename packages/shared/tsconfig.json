@@ -2,7 +2,10 @@
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    // The package itself is runtime-agnostic; its tests are not — they use
+    // node:test and node:assert.
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
