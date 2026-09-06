@@ -69,9 +69,9 @@ export const MAX_MANIFEST_FILES = 10;
  * is the only handle we have on a caller and this is the only abuse control
  * standing between a stranger and our Gemini bill.
  *
- * The two tiers reflect what a request actually costs: /v1/overview and
- * /v1/brief can each spend a full generation, while /v1/issues is a GitHub
- * read with a heuristic on top.
+ * The two tiers reflect what a request actually costs: /v1/brief spends one
+  * generation, while /v1/overview may spend up to two (overview + conventions).
+  * /v1/issues is a GitHub read with a heuristic on top.
  */
 export const GENERATION_RATE_LIMIT = {
   limit: 10,

@@ -61,7 +61,7 @@ function getClient(): SupabaseClient | null {
       warned = true;
       console.warn(
         "SUPABASE_URL / SUPABASE_SECRET_KEY are not set — caching is off, " +
-          "every overview request will pay for a full generation.",
+          "overview requests may pay for multiple Gemini generations (overview + conventions).",
       );
     }
     return null;
