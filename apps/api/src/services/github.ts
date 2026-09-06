@@ -237,6 +237,22 @@ export function selectDocPaths(fileTree: string[]): string[] {
     .sort(byDepthThenName);
 }
 
+/**
+ * The CONTRIBUTING doc out of a fetched doc set, if the repo has one.
+ *
+ * Matched on basename so a repo that keeps it at `.github/CONTRIBUTING.md`
+ * still resolves. Returns null rather than an empty string, because "no
+ * contributing guide" is a fact the prompt should state, not a blank section.
+ */
+export function selectContributing(
+  docs: Record<string, string>,
+): string | null {
+  for (const [path, content] of Object.entries(docs)) {
+    if (basename(path).toLowerCase() === "contributing.md") return content;
+  }
+  return null;
+}
+
 function isIgnored(path: string): boolean {
   // The last segment is the filename, so only directories are considered.
   return path

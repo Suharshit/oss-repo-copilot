@@ -64,6 +64,25 @@ export const MAX_FILE_CHARS = 40_000;
 /** Manifests are matched by basename, so a monorepo can match many. */
 export const MAX_MANIFEST_FILES = 10;
 
+/**
+ * Rate limits, keyed by client IP (OQ-2). There is no login (D-01), so an IP
+ * is the only handle we have on a caller and this is the only abuse control
+ * standing between a stranger and our Gemini bill.
+ *
+ * The two tiers reflect what a request actually costs: /v1/brief spends one
+  * generation, while /v1/overview may spend up to two (overview + conventions).
+  * /v1/issues is a GitHub read with a heuristic on top.
+ */
+export const GENERATION_RATE_LIMIT = {
+  limit: 10,
+  windowMs: 10 * 60_000,
+} as const;
+
+export const READ_RATE_LIMIT = {
+  limit: 60,
+  windowMs: 60_000,
+} as const;
+
 /** Gemini model used for both generation calls; override with MODEL. */
 export const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
