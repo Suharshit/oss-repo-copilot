@@ -2,11 +2,21 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
+
+# A newer push to the same branch/PR cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -21,8 +31,43 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Turbo's local task cache. Unchanged packages replay their previous
+      # lint/typecheck/test/build result instead of running again.
+      - uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
+
+      - run: pnpm format:check
+
       - run: pnpm turbo run lint
 
       - run: pnpm turbo run check-types
 
+      - run: pnpm turbo run test
+
       - run: pnpm turbo run build
+
+  # Applies every migration to a fresh Postgres and lints the resulting schema.
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec supabase db start
+
+      - run: pnpm exec supabase db lint --local --fail-on error
+
+      - if: always()
+        run: pnpm exec supabase stop --no-backup
