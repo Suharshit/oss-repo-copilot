@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "noEmit": true,
+    // @repo/shared's source imports its own files with .ts extensions.
+    "allowImportingTsExtensions": true,
     "lib": ["ES2023"],
     "types": ["node"]
   },

@@ -1,0 +1,10 @@
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 2.5rem 1rem 4rem;
+}
+
+.main {
+  width: 100%;
+  max-width: 52rem;
+}

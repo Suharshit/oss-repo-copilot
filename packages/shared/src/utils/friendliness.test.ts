@@ -5,7 +5,7 @@ import {
   daysSince,
   friendlinessScore,
   looksClaimed,
-} from "./friendliness.js";
+} from "./friendliness.ts";
 
 /**
  * The score is a deterministic heuristic, not a model, so it can be pinned

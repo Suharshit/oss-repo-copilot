@@ -1,5 +1,5 @@
-import { GITHUB_WEB_BASE } from "../constants/index.js";
-import type { RepoRef } from "../types/repo.js";
+import { GITHUB_WEB_BASE } from "../constants/index.ts";
+import type { RepoRef } from "../types/repo.ts";
 
 export interface IssueRef extends RepoRef {
   number: number;

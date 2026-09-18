@@ -1,4 +1,4 @@
-import { OVERVIEW_TTL_DAYS } from "../constants/index.js";
+import { OVERVIEW_TTL_DAYS } from "../constants/index.ts";
 
 export function formatRelativeTime(
   isoDate: string,

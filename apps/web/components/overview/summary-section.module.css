@@ -1,0 +1,5 @@
+/* pre-line keeps the model's paragraph breaks without rendering markdown. */
+.summary {
+  line-height: 1.65;
+  white-space: pre-line;
+}

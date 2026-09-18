@@ -1,0 +1,22 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.notice {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

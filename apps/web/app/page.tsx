@@ -1,11 +1,7 @@
-import { Button } from "@repo/shared/ui/button";
+import { RepoUrlForm } from "../components/repo-url-form/repo-url-form";
 import styles from "./page.module.css";
 
-/**
- * Landing page shell: nav, headline, and the single repo-URL input the product
- * is built around. Submitting does nothing yet — wiring it to POST /v1/overview
- * is US-1, not part of the scaffold.
- */
+/** Landing page: one repo-URL input. Submitting opens the repo's own page (US-1). */
 export default function Home() {
   return (
     <div className={styles.page}>
@@ -19,20 +15,7 @@ export default function Home() {
           which files to touch.
         </p>
 
-        <form className={styles.form}>
-          <input
-            className={styles.input}
-            type="url"
-            name="repoUrl"
-            placeholder="https://github.com/owner/name"
-            aria-label="GitHub repository URL"
-          />
-          <Button type="submit" disabled>
-            Analyze
-          </Button>
-        </form>
-
-        <p className={styles.note}>Not wired up yet — this is the UI shell.</p>
+        <RepoUrlForm />
       </main>
     </div>
   );

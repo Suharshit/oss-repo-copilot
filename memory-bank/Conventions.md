@@ -8,9 +8,16 @@ one, note it in [`Decisions.md`](./Decisions.md).
 ### TypeScript
 
 - **ESM everywhere.** Every package is `"type": "module"`. Relative imports
-  inside `apps/api` and `packages/shared` use the `.js` extension
-  (`./lib/errors.js`) because the base config is `NodeNext`. `apps/web` uses
-  `Bundler` resolution and does not.
+  inside `apps/api` use the `.js` extension (`./lib/errors.js`) because the
+  base config is `NodeNext`. `packages/shared` uses the **`.ts`** extension
+  (`./format.ts`, with `allowImportingTsExtensions`), because `apps/web` bundles
+  its source and Turbopack will not map `./x.js` to `x.ts`. Any tsconfig
+  that type-checks shared's source (shared, api, web) needs that flag. `apps/web`
+  uses `Bundler` resolution and its own imports have no extension.
+- **`apps/web` builds with webpack** (`next dev --webpack`, `next build
+--webpack`), and `next.config.js` sets `extensionAlias` for `.js` → `.ts`.
+  The shared `.ts` extensions make Turbopack work too, so dropping `--webpack`
+  is a one-line change if dev speed matters more.
 - **Strict.** `strict`, `noUncheckedIndexedAccess`, `isolatedModules`,
   `declaration` are all on via `@repo/typescript-config/base.json`. Array and
   record access is possibly-undefined — handle it, don't `!` it.

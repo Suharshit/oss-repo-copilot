@@ -212,11 +212,11 @@ No app depends on another app. Nothing depends on `web` or `api`.
 
 ### Build pipeline
 
-| Package | `dev`                    | `build`                                   |
-| ------- | ------------------------ | ----------------------------------------- |
-| web     | `next dev --port 3000`   | `next build` → `.next/`                   |
-| api     | `tsx watch src/index.ts` | esbuild bundle → `apps/api/dist/index.js` |
-| shared  | (none — source only)     | (none)                                    |
+| Package | `dev`                            | `build`                                   |
+| ------- | -------------------------------- | ----------------------------------------- |
+| web     | `next dev --webpack --port 3000` | `next build --webpack` → `.next/`         |
+| api     | `tsx watch src/index.ts`         | esbuild bundle → `apps/api/dist/index.js` |
+| shared  | (none — source only)             | (none)                                    |
 
 The API is **bundled**, not compiled file-by-file. esbuild inlines
 `@repo/shared`'s TypeScript source into a single ESM file, which is why shared
