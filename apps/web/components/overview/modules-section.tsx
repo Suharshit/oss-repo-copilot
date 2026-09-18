@@ -13,7 +13,9 @@ export function ModulesSection({ repo, modules }: ModulesSectionProps) {
       title="Main modules"
       actions={
         modules.length > 0 && (
-          <span className="text-[0.8125rem] text-muted">{modules.length}</span>
+          <span className="text-[0.8125rem] text-muted-foreground">
+            {modules.length}
+          </span>
         )
       }
     >
@@ -33,14 +35,16 @@ export function ModulesSection({ repo, modules }: ModulesSectionProps) {
               >
                 <code>{module.path}</code>
               </a>
-              <p className="text-[0.9375rem]/[1.55] text-muted">
+              <p className="text-[0.9375rem]/[1.55] text-muted-foreground">
                 {module.description}
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted">No main modules were identified.</p>
+        <p className="text-sm text-muted-foreground">
+          No main modules were identified.
+        </p>
       )}
     </Section>
   );

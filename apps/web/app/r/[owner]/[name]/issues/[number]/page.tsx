@@ -28,7 +28,7 @@ export default async function IssuePage({
       <main className="flex w-full max-w-208 flex-col gap-6">
         <Link
           href={repoPagePath(ref, "issues")}
-          className="w-fit text-sm text-muted hover:text-foreground hover:underline"
+          className="w-fit text-sm text-muted-foreground hover:text-foreground hover:underline"
         >
           ← All issues
         </Link>
@@ -36,7 +36,7 @@ export default async function IssuePage({
         <RepoHeader repo={ref} />
 
         <Section title={`Issue #${number}`}>
-          <p className="text-[0.9375rem]/[1.55] text-muted">
+          <p className="text-[0.9375rem]/[1.55] text-muted-foreground">
             Contribution briefs are on the way. Soon this page will show the
             files to look at and a suggested approach for this issue.
           </p>

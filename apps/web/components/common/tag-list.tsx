@@ -1,3 +1,6 @@
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
 interface TagListProps {
   tags: string[];
   /** Accessible name for the list, e.g. "Tech stack" or "Issue labels". */
@@ -10,16 +13,12 @@ export function TagList({ tags, label, className }: TagListProps) {
   if (tags.length === 0) return null;
 
   return (
-    <ul
-      className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}
-      aria-label={label}
-    >
+    <ul className={cn("flex flex-wrap gap-2", className)} aria-label={label}>
       {tags.map((tag) => (
-        <li
-          key={tag}
-          className="rounded-full border border-border px-2.5 py-1 text-[0.8125rem]/[1.4]"
-        >
-          {tag}
+        <li key={tag}>
+          <Badge variant="outline" className="font-normal">
+            {tag}
+          </Badge>
         </li>
       ))}
     </ul>

@@ -18,13 +18,15 @@ export function IssueList({ repo, response }: IssueListProps) {
       title={labelled ? "Good first issues" : "Open issues"}
       actions={
         issues.length > 0 && (
-          <span className="text-[0.8125rem] text-muted">{issues.length}</span>
+          <span className="text-[0.8125rem] text-muted-foreground">
+            {issues.length}
+          </span>
         )
       }
     >
       {/* Without the label the ranking leans on comments and age alone, so say so. */}
       {!labelled && issues.length > 0 && (
-        <p className="text-sm/normal text-muted">
+        <p className="text-sm/normal text-muted-foreground">
           Nothing here is labelled “{GOOD_FIRST_ISSUE_LABEL}”, so these are the
           most recent open issues, ranked by how approachable they look.
         </p>
@@ -37,7 +39,7 @@ export function IssueList({ repo, response }: IssueListProps) {
           ))}
         </ol>
       ) : (
-        <p className="text-sm/normal text-muted">
+        <p className="text-sm/normal text-muted-foreground">
           This repo has no open issues right now.
         </p>
       )}

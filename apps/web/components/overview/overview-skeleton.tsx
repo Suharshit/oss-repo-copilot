@@ -1,5 +1,5 @@
 import { Section } from "../common/section";
-import { Skeleton } from "../common/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Loading state for the overview. Generation is synchronous (D-02) and a cold
@@ -8,33 +8,33 @@ import { Skeleton } from "../common/skeleton";
 export function OverviewSkeleton() {
   return (
     <div className="flex flex-col gap-4" role="status" aria-live="polite">
-      <p className="text-sm text-muted">
+      <p className="text-sm text-muted-foreground">
         Reading the file tree, README and manifests, then writing the overview.
         The first visit to a repo can take up to a minute.
       </p>
 
       <Section title="What this repo does">
         <div className="flex flex-col gap-2.5">
-          <Skeleton />
-          <Skeleton />
-          <Skeleton width="70%" />
+          <Skeleton className="h-3.5 w-full" />
+          <Skeleton className="h-3.5 w-full" />
+          <Skeleton className="h-3.5 w-[70%]" />
         </div>
       </Section>
 
       <Section title="Tech stack">
         <div className="flex flex-wrap gap-2">
-          <Skeleton width="5rem" height="1.75rem" />
-          <Skeleton width="6.5rem" height="1.75rem" />
-          <Skeleton width="4rem" height="1.75rem" />
+          <Skeleton className="h-7 w-20" />
+          <Skeleton className="h-7 w-26" />
+          <Skeleton className="h-7 w-16" />
         </div>
       </Section>
 
       <Section title="Main modules">
         <div className="flex flex-col gap-2.5">
-          <Skeleton width="30%" />
-          <Skeleton width="85%" />
-          <Skeleton width="25%" />
-          <Skeleton width="75%" />
+          <Skeleton className="h-3.5 w-[30%]" />
+          <Skeleton className="h-3.5 w-[85%]" />
+          <Skeleton className="h-3.5 w-1/4" />
+          <Skeleton className="h-3.5 w-3/4" />
         </div>
       </Section>
     </div>

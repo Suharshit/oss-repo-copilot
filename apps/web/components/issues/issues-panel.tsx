@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { RepoRef } from "@repo/shared/types";
-import { Button } from "@repo/shared/ui/button";
+import { Button } from "@/components/ui/button";
 import { useRankedIssues } from "../../hooks/use-ranked-issues";
 import { ERROR_TITLES } from "../../lib/load-error";
 import { ErrorState } from "../common/error-state";
@@ -39,7 +39,7 @@ export function IssuesPanel({ repoRef }: IssuesPanelProps) {
               )}
               <Link
                 href="/"
-                className="text-sm text-muted hover:text-foreground hover:underline"
+                className="text-sm text-muted-foreground hover:text-foreground hover:underline"
               >
                 Try another repo
               </Link>

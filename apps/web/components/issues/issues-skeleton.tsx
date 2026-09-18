@@ -1,5 +1,5 @@
 import { Section } from "../common/section";
-import { Skeleton } from "../common/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ROWS = 4;
 
@@ -8,7 +8,7 @@ export function IssuesSkeleton() {
   return (
     <div role="status" aria-live="polite">
       <Section title="Good first issues">
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Fetching open issues and ranking them…
         </p>
         <ul className="flex flex-col gap-3" aria-hidden>
@@ -17,9 +17,9 @@ export function IssuesSkeleton() {
               key={index}
               className="flex flex-col gap-2.5 rounded-[0.625rem] border border-border p-4"
             >
-              <Skeleton width="7.5rem" height="1.25rem" />
-              <Skeleton width={index % 2 ? "60%" : "80%"} height="1rem" />
-              <Skeleton width="40%" height="0.75rem" />
+              <Skeleton className="h-5 w-30" />
+              <Skeleton className={index % 2 ? "h-4 w-3/5" : "h-4 w-4/5"} />
+              <Skeleton className="h-3 w-2/5" />
             </li>
           ))}
         </ul>

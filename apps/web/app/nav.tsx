@@ -20,7 +20,7 @@ export function Nav() {
         </span>
         repo-onboarding-copilot
       </Link>
-      <div className="flex gap-5 text-sm text-muted">
+      <div className="flex gap-5 text-sm text-muted-foreground">
         <a
           href="https://github.com/Suharshit/oss-repo-copilot"
           target="_blank"

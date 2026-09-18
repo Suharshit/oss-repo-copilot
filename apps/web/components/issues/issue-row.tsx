@@ -16,7 +16,7 @@ export function IssueRow({ repo, issue }: IssueRowProps) {
     issue.commentCount === 1 ? "1 comment" : `${issue.commentCount} comments`;
 
   return (
-    <li className="relative flex flex-col items-start gap-2 rounded-[0.625rem] border border-border bg-background p-4 transition-colors duration-150 focus-within:border-muted hover:border-muted">
+    <li className="relative flex flex-col items-start gap-2 rounded-[0.625rem] border border-border bg-background p-4 transition-colors duration-150 focus-within:border-muted-foreground hover:border-muted-foreground">
       <FriendlinessBadge score={issue.friendlinessScore} />
 
       <h3 className="text-base/[1.4] font-medium wrap-anywhere">
@@ -26,14 +26,16 @@ export function IssueRow({ repo, issue }: IssueRowProps) {
           className="outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-foreground"
           href={issuePagePath(repo, issue.number)}
         >
-          <span className="font-normal text-muted">#{issue.number}</span>{" "}
+          <span className="font-normal text-muted-foreground">
+            #{issue.number}
+          </span>{" "}
           {issue.title}
         </Link>
       </h3>
 
-      <TagList tags={issue.labels} label="Labels" className="[&>li]:text-xs" />
+      <TagList tags={issue.labels} label="Labels" />
 
-      <p className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-muted">
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
         <span title={new Date(issue.createdAt).toLocaleString()}>
           Opened {formatRelativeTime(issue.createdAt)}
         </span>

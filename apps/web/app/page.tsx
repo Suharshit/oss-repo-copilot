@@ -8,7 +8,7 @@ export default function Home() {
         <h1 className="text-[clamp(1.75rem,5vw,2.5rem)] leading-[1.15] font-bold tracking-[-0.02em]">
           Go from &ldquo;I found this repo&rdquo; to a shipped PR
         </h1>
-        <p className="leading-[1.6] text-muted">
+        <p className="leading-[1.6] text-muted-foreground">
           Paste a public GitHub repository and get an overview of what it does,
           a ranked list of approachable open issues, and a brief telling you
           which files to touch.

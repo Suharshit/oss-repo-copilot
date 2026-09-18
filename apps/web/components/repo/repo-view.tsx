@@ -1,15 +1,15 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import type { RepoRef } from "@repo/shared/types";
-import { Button } from "@repo/shared/ui/button";
 import { useRepoOverview } from "../../hooks/use-repo-overview";
 import { repoPagePath, type RepoTab } from "../../lib/routes";
-import { tabId, tabPanelId, Tabs, type TabItem } from "../common/tabs";
 import { IssuesPanel } from "../issues/issues-panel";
 import { RepoMeta } from "../overview/repo-meta";
 import { RepoOverview } from "../overview/repo-overview";
 import { RepoHeader } from "./repo-header";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RepoViewProps {
   repoRef: RepoRef;
@@ -17,7 +17,7 @@ interface RepoViewProps {
   initialTab: RepoTab;
 }
 
-const TABS: readonly TabItem<RepoTab>[] = [
+const TABS: readonly { id: RepoTab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "issues", label: "Issues" },
 ];
@@ -32,9 +32,9 @@ export function RepoView({ repoRef, initialTab }: RepoViewProps) {
   const overview = useRepoOverview(repoRef);
   const [tab, setTab] = useState<RepoTab>(initialTab);
   const [issuesOpened, setIssuesOpened] = useState(initialTab === "issues");
-  const idPrefix = useId();
-
-  function selectTab(next: RepoTab) {
+  function selectTab(value: string) {
+    const next = TABS.find((item) => item.id === value)?.id;
+    if (!next) return;
     setTab(next);
     if (next === "issues") setIssuesOpened(true);
     // Replace rather than push: tabs are a view of one page, not history.
@@ -44,7 +44,7 @@ export function RepoView({ repoRef, initialTab }: RepoViewProps) {
   const { data, pending, reload } = overview;
   const regenerate = data && tab === "overview" && (
     <Button
-      variant="secondary"
+      variant="outline"
       onClick={() => void reload(true)}
       disabled={pending}
       title="Skip the cached overview and generate a new one"
@@ -61,31 +61,37 @@ export function RepoView({ repoRef, initialTab }: RepoViewProps) {
         actions={regenerate}
       />
 
-      <Tabs
-        tabs={TABS}
-        active={tab}
-        onChange={selectTab}
-        label="Repo sections"
-        idPrefix={idPrefix}
-      />
+      <Tabs value={tab} onValueChange={selectTab} className="gap-6">
+        <TabsList variant="line" aria-label="Repo sections">
+          {TABS.map((item) => (
+            <TabsTrigger
+              key={item.id}
+              value={item.id}
+              className="px-3 text-[0.9375rem]"
+            >
+              {item.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <div
-        role="tabpanel"
-        id={tabPanelId(idPrefix, "overview")}
-        aria-labelledby={tabId(idPrefix, "overview")}
-        hidden={tab !== "overview"}
-      >
-        <RepoOverview state={overview} />
-      </div>
+        {/* forceMount keeps both panels mounted, so switching never refetches;
+            the inactive one is hidden with CSS instead. */}
+        <TabsContent
+          value="overview"
+          forceMount
+          className="text-base data-[state=inactive]:hidden"
+        >
+          <RepoOverview state={overview} />
+        </TabsContent>
 
-      <div
-        role="tabpanel"
-        id={tabPanelId(idPrefix, "issues")}
-        aria-labelledby={tabId(idPrefix, "issues")}
-        hidden={tab !== "issues"}
-      >
-        {issuesOpened && <IssuesPanel repoRef={repoRef} />}
-      </div>
+        <TabsContent
+          value="issues"
+          forceMount
+          className="text-base data-[state=inactive]:hidden"
+        >
+          {issuesOpened && <IssuesPanel repoRef={repoRef} />}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

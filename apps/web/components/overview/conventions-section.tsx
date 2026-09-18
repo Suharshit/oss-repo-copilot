@@ -31,21 +31,21 @@ export function ConventionsSection({ conventions }: ConventionsSectionProps) {
           {rows.map(({ key, label, value }) => (
             <div key={key} className="flex flex-col gap-1">
               <dt className="text-sm font-semibold">{label}</dt>
-              <dd className="text-[0.9375rem]/[1.55] whitespace-pre-line text-muted">
+              <dd className="text-[0.9375rem]/[1.55] whitespace-pre-line text-muted-foreground">
                 {value}
               </dd>
             </div>
           ))}
         </dl>
       ) : (
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           This repo doesn&rsquo;t document contribution rules in a
           CONTRIBUTING.md or similar file.
         </p>
       )}
 
       {conventions && conventions.sources.length > 0 && (
-        <p className="text-[0.8125rem] text-muted">
+        <p className="text-[0.8125rem] text-muted-foreground">
           From{" "}
           {conventions.sources.map((source, index) => (
             <span key={source}>

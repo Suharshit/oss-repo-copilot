@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@repo/shared/ui/button";
 import { parseRepoUrl } from "@repo/shared/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { repoPagePath } from "../../lib/routes";
 
 const INVALID_URL_MESSAGE =
@@ -42,8 +43,8 @@ export function RepoUrlForm() {
       <div className="flex gap-2 max-[30rem]:flex-col">
         {/* type="text", not "url": the browser's url check rejects
             "github.com/owner/name", which parseRepoUrl accepts. */}
-        <input
-          className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3.5 py-3 text-foreground focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground aria-invalid:border-danger"
+        <Input
+          className="h-11 flex-1 bg-background px-3.5 md:text-base"
           type="text"
           inputMode="url"
           autoComplete="off"
@@ -59,12 +60,21 @@ export function RepoUrlForm() {
             if (error) setError(null);
           }}
         />
-        <Button type="submit" disabled={!value.trim() || navigating}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-11 px-5 text-base"
+          disabled={!value.trim() || navigating}
+        >
           {navigating ? "Opening…" : "Generate overview"}
         </Button>
       </div>
       {error && (
-        <p id="repo-url-error" role="alert" className="text-sm text-danger">
+        <p
+          id="repo-url-error"
+          role="alert"
+          className="text-sm text-destructive"
+        >
           {error}
         </p>
       )}
