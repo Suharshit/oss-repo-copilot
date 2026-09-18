@@ -50,14 +50,14 @@ pnpm dev --filter=api
 
 ## Tasks
 
-| Command            | What it does                                     |
-| ------------------ | ------------------------------------------------ |
-| `pnpm dev`         | Next dev server + `tsx watch` on the API         |
-| `pnpm build`       | `next build` + esbuild bundle to `apps/api/dist` |
-| `pnpm start`       | Serve both production builds                     |
-| `pnpm lint`        | ESLint across every package                      |
-| `pnpm check-types` | `tsc --noEmit` across every package              |
-| `pnpm format`      | Prettier                                         |
+| Command            | What it does                                               |
+| ------------------ | ---------------------------------------------------------- |
+| `pnpm dev`         | Next dev server + `tsx watch` on the API                   |
+| `pnpm build`       | `next build --webpack` + esbuild bundle to `apps/api/dist` |
+| `pnpm start`       | Serve both production builds                               |
+| `pnpm lint`        | ESLint across every package                                |
+| `pnpm check-types` | `tsc --noEmit` across every package                        |
+| `pnpm format`      | Prettier                                                   |
 
 Requires Node >= 24 and pnpm 11.
 
@@ -107,7 +107,7 @@ creation and env var entry need a login), pointing it at this repo with:
 | Root Directory   | `apps/web`                                                 |
 | Framework Preset | Next.js                                                    |
 | Install Command  | default (Vercel reads `packageManager`)                    |
-| Build Command    | default (`next build`)                                     |
+| Build Command    | default (the `build` script, `next build --webpack`)       |
 | Env vars         | `NEXT_PUBLIC_API_URL` — see [.env.example](./.env.example) |
 
 **`apps/api` → undecided (OQ-4).** Hono runs on Node, Vercel functions and

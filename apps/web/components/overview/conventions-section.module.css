@@ -1,0 +1,28 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.term {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.sources {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { OVERVIEW_TTL_DAYS } from "../constants/index.js";
+import { OVERVIEW_TTL_DAYS } from "../constants/index.ts";
 import {
   formatRelativeTime,
   isExpired,
   overviewExpiry,
   truncate,
-} from "./format.js";
+} from "./format.ts";
 
 describe("truncate", () => {
   it("leaves text within the budget alone", () => {

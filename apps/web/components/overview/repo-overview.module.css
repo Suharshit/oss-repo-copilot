@@ -1,0 +1,27 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: opacity 0.2s ease;
+}
+
+/* Dim the current overview while a regenerate is in flight. */
+.sections[data-stale] {
+  opacity: 0.55;
+}
+
+.backLink {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.backLink:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}

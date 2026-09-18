@@ -1,5 +1,5 @@
-import { FIRST_TIMER_LABELS } from "../constants/index.js";
-import type { FriendlinessSignals } from "../types/issue.js";
+import { FIRST_TIMER_LABELS } from "../constants/index.ts";
+import type { FriendlinessSignals } from "../types/issue.ts";
 
 const CLAIM_PHRASES = [
   "i'll take this",

@@ -1,5 +1,5 @@
-import type { Issue, ContributionBrief } from "./issue.js";
-import type { Repo, RepoConventions, RepoOverview } from "./repo.js";
+import type { Issue, ContributionBrief } from "./issue.ts";
+import type { Repo, RepoConventions, RepoOverview } from "./repo.ts";
 
 /** Every apps/api response is one of these two shapes. */
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;

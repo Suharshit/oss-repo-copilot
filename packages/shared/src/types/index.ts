@@ -1,3 +1,3 @@
-export type * from "./api.js";
-export type * from "./issue.js";
-export type * from "./repo.js";
+export type * from "./api.ts";
+export type * from "./issue.ts";
+export type * from "./repo.ts";

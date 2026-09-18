@@ -4,6 +4,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "strictNullChecks": true,
+    // Relative imports carry a .ts extension so Turbopack can resolve them;
+    // it won't map "./x.js" to x.ts. Nothing emits: consumers read src.
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     // The package itself is runtime-agnostic; its tests are not — they use
     // node:test and node:assert.
     "types": ["node"]

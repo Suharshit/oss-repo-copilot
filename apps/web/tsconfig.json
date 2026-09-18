@@ -6,7 +6,9 @@
         "name": "next"
       }
     ],
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    // @repo/shared's source imports its own files with .ts extensions.
+    "allowImportingTsExtensions": true
   },
   "include": [
     "**/*.ts",

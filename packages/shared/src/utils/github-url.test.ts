@@ -7,7 +7,7 @@ import {
   parseRepoUrl,
   repoId,
   repoUrl,
-} from "./github-url.js";
+} from "./github-url.ts";
 
 /**
  * These parse whatever a user pasted, so the interesting cases are the untidy
