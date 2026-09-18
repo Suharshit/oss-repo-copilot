@@ -124,6 +124,10 @@ root without pulling React into its bundle.
 
 **Consequence:** never re-export `./ui` from `src/index.ts`.
 
+**Update (2026-09-18):** the `ui` entry point was removed. `apps/web` moved to
+shadcn/ui, whose components live in `apps/web/components/ui`, which left
+`@repo/shared/ui` unused. `@repo/shared` now has no React code or dependency.
+
 ### D-11 — Shared is a just-in-time package (source, not `dist`)
 
 **Status:** accepted

@@ -73,8 +73,6 @@ Reference spec sections (`spec §6`) and user stories (`US-2`) where it helps.
 - Colors use shadcn token names (`text-muted-foreground`, `bg-card`,
   `text-destructive`…). Dark mode follows `prefers-color-scheme`.
 - Merge class names with `cn` from `@/lib/utils`.
-- Shared components in `@repo/shared/ui` take a `className` prop and merge it;
-  they never hardcode layout or positioning.
 - `"use client"` only where interactivity actually requires it.
 - Fonts are local (`next/font/local`, Geist), not fetched from a CDN.
 
