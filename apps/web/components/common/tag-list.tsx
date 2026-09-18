@@ -7,7 +7,7 @@ interface TagListProps {
   className?: string;
 }
 
-/** A wrapping row of pill tags. Used for tech stack now, issue labels later. */
+/** A wrapping row of pill tags. Used for tech stack and issue labels. */
 export function TagList({ tags, label, className }: TagListProps) {
   if (tags.length === 0) return null;
 

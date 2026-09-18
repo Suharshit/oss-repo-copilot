@@ -3,13 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { OverviewResponse, RepoRef } from "@repo/shared/types";
 import { repoUrl } from "@repo/shared/utils";
-import { ApiRequestError, getRepoOverview } from "../lib/api";
-
-/** An error ready to show: the API's own message, or a fallback for network failures. */
-export interface LoadError {
-  code: string;
-  message: string;
-}
+import { getRepoOverview } from "../lib/api";
+import { toLoadError, type LoadError } from "../lib/load-error";
 
 export interface RepoOverviewState {
   data: OverviewResponse | null;
@@ -40,7 +35,7 @@ export function useRepoOverview(ref: RepoRef): RepoOverviewState {
         if (active) setData(response);
       })
       .catch((cause: unknown) => {
-        if (active) setError(toLoadError(cause));
+        if (active) setError(toLoadError(cause, "Overview"));
       })
       .finally(() => {
         if (active) setPending(false);
@@ -57,7 +52,7 @@ export function useRepoOverview(ref: RepoRef): RepoOverviewState {
       try {
         setData(await getRepoOverview({ url, refresh }));
       } catch (cause) {
-        setError(toLoadError(cause));
+        setError(toLoadError(cause, "Overview"));
       } finally {
         setPending(false);
       }
@@ -66,16 +61,4 @@ export function useRepoOverview(ref: RepoRef): RepoOverviewState {
   );
 
   return { data, error, pending, reload };
-}
-
-function toLoadError(cause: unknown): LoadError {
-  if (cause instanceof ApiRequestError) {
-    return { code: cause.code, message: cause.message };
-  }
-  // fetch rejects with a TypeError when the API is down or CORS blocks it.
-  console.error("Overview request failed", cause);
-  return {
-    code: "network_error",
-    message: "Couldn't reach the server. Check your connection and try again.",
-  };
 }

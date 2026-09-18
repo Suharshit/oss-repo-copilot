@@ -14,11 +14,11 @@ export const issueRoutes = new Hono().get("/", async (c) => {
     );
   }
 
-  const [repo, issues] = await Promise.all([
+  const [repo, { issues, source }] = await Promise.all([
     fetchRepo(ref),
     fetchScoredIssues(ref),
   ]);
 
-  const response: IssuesResponse = { repo, issues };
+  const response: IssuesResponse = { repo, issues, source };
   return c.json(ok(response));
 });

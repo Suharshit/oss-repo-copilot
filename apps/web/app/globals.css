@@ -7,6 +7,13 @@
   --danger: #c62828;
   --danger-border: #f3c4c4;
   --danger-surface: #fdf3f3;
+  /* Friendliness badges on the issue list. */
+  --great: #1a7f37;
+  --great-border: #b7e4c3;
+  --great-surface: #eefbf1;
+  --good: #0b62c4;
+  --good-border: #bcd6f5;
+  --good-surface: #eef5fd;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,6 +26,12 @@
     --danger: #ff7b72;
     --danger-border: #5c2626;
     --danger-surface: #1d1111;
+    --great: #3fb950;
+    --great-border: #1f4a2a;
+    --great-surface: #0f1f14;
+    --good: #58a6ff;
+    --good-border: #1d3a5f;
+    --good-surface: #0d1a2b;
   }
 
   html {

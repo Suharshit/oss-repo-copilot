@@ -26,6 +26,22 @@ export const FIRST_TIMER_LABELS = [
   "easy",
 ] as const;
 
+/**
+ * The label the issue list queries GitHub by (US-2). Filtering server-side
+ * reaches labelled issues of any age, not just the newest page of open ones.
+ */
+export const GOOD_FIRST_ISSUE_LABEL = "good first issue";
+
+/**
+ * Score cut-offs for the badge shown on each issue row. A labelled, quiet,
+ * triaged issue scores 1; an unlabelled one tops out at 0.5 (see the
+ * friendliness tests), so "great" effectively requires a first-timer label.
+ */
+export const FRIENDLINESS_TIER_THRESHOLDS = {
+  great: 0.8,
+  good: 0.6,
+} as const;
+
 /** Files worth reading to build an overview — no AST parsing in v1 (spec §6). */
 export const MANIFEST_FILES = [
   "package.json",
