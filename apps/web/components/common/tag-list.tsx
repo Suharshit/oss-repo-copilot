@@ -1,4 +1,5 @@
-import styles from "./tag-list.module.css";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface TagListProps {
   tags: string[];
@@ -12,13 +13,12 @@ export function TagList({ tags, label, className }: TagListProps) {
   if (tags.length === 0) return null;
 
   return (
-    <ul
-      className={[styles.list, className].filter(Boolean).join(" ")}
-      aria-label={label}
-    >
+    <ul className={cn("flex flex-wrap gap-2", className)} aria-label={label}>
       {tags.map((tag) => (
-        <li key={tag} className={styles.tag}>
-          {tag}
+        <li key={tag}>
+          <Badge variant="outline" className="font-normal">
+            {tag}
+          </Badge>
         </li>
       ))}
     </ul>

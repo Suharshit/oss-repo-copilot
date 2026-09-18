@@ -26,7 +26,6 @@ never pulls React in:
 | `@repo/shared/types`     | `Repo`, `Issue`, `ApiResponse<T>`, …                 |
 | `@repo/shared/utils`     | GitHub URL parsing, friendliness scoring, formatting |
 | `@repo/shared/constants` | route paths, TTLs, label lists, ports                |
-| `@repo/shared/ui/<name>` | React components (`button`, `card`, `code`)          |
 
 Route paths and response types live in `shared`, so `apps/web`'s client in
 [apps/web/lib/api.ts](./apps/web/lib/api.ts) and the handlers in

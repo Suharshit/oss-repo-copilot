@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import type { RepoRef } from "@repo/shared/types";
-import { Button } from "@repo/shared/ui/button";
+import { Button } from "@/components/ui/button";
 import { useRankedIssues } from "../../hooks/use-ranked-issues";
 import { ERROR_TITLES } from "../../lib/load-error";
 import { ErrorState } from "../common/error-state";
 import { IssueList } from "./issue-list";
 import { IssuesSkeleton } from "./issues-skeleton";
-import styles from "./issues-panel.module.css";
 
 interface IssuesPanelProps {
   repoRef: RepoRef;
@@ -25,7 +24,7 @@ export function IssuesPanel({ repoRef }: IssuesPanelProps) {
   const { data, error, pending, reload } = useRankedIssues(repoRef);
 
   return (
-    <div className={styles.stack}>
+    <div className="flex flex-col gap-4">
       {error && (
         <ErrorState
           title={ISSUE_ERROR_TITLES[error.code] ?? "Something went wrong"}
@@ -38,7 +37,10 @@ export function IssuesPanel({ repoRef }: IssuesPanelProps) {
                   Try again
                 </Button>
               )}
-              <Link href="/" className={styles.backLink}>
+              <Link
+                href="/"
+                className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+              >
                 Try another repo
               </Link>
             </>
@@ -49,7 +51,11 @@ export function IssuesPanel({ repoRef }: IssuesPanelProps) {
       {pending && !data && <IssuesSkeleton />}
 
       {data && (
-        <div aria-busy={pending} data-stale={pending || undefined}>
+        <div
+          className="transition-opacity duration-200 data-stale:opacity-55"
+          aria-busy={pending}
+          data-stale={pending || undefined}
+        >
           <IssueList repo={repoRef} response={data} />
         </div>
       )}

@@ -1,6 +1,5 @@
-// Server-safe surface: types, utils and constants only.
-// React components are imported explicitly from "@repo/shared/ui/<name>"
-// so apps/api never pulls React into its bundle.
+// Types, utils and constants. Server-safe: the package has no React code,
+// so apps/api can import it freely. UI components live in apps/web.
 export * from "./constants/index.ts";
 export * from "./types/index.ts";
 export * from "./utils/index.ts";

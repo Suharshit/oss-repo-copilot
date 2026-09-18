@@ -1,7 +1,5 @@
 import type { RepoConventions } from "@repo/shared/types";
 import { Section } from "../common/section";
-import emptyStyles from "./empty.module.css";
-import styles from "./conventions-section.module.css";
 
 interface ConventionsSectionProps {
   /** null when the repo has no contributing docs to extract from. */
@@ -29,23 +27,25 @@ export function ConventionsSection({ conventions }: ConventionsSectionProps) {
   return (
     <Section title="Contribution conventions">
       {rows.length > 0 ? (
-        <dl className={styles.list}>
+        <dl className="flex flex-col gap-4">
           {rows.map(({ key, label, value }) => (
-            <div key={key} className={styles.row}>
-              <dt className={styles.term}>{label}</dt>
-              <dd className={styles.value}>{value}</dd>
+            <div key={key} className="flex flex-col gap-1">
+              <dt className="text-sm font-semibold">{label}</dt>
+              <dd className="text-[0.9375rem]/[1.55] whitespace-pre-line text-muted-foreground">
+                {value}
+              </dd>
             </div>
           ))}
         </dl>
       ) : (
-        <p className={emptyStyles.empty}>
+        <p className="text-sm text-muted-foreground">
           This repo doesn&rsquo;t document contribution rules in a
           CONTRIBUTING.md or similar file.
         </p>
       )}
 
       {conventions && conventions.sources.length > 0 && (
-        <p className={styles.sources}>
+        <p className="text-[0.8125rem] text-muted-foreground">
           From{" "}
           {conventions.sources.map((source, index) => (
             <span key={source}>

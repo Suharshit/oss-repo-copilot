@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
-import styles from "./section.module.css";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface SectionProps {
   title: string;
@@ -12,12 +19,25 @@ interface SectionProps {
 /** A titled card. Every block on a repo page (overview, issues, brief) is one. */
 export function Section({ title, actions, className, children }: SectionProps) {
   return (
-    <section className={[styles.section, className].filter(Boolean).join(" ")}>
-      <header className={styles.header}>
-        <h2 className={styles.title}>{title}</h2>
-        {actions}
-      </header>
-      {children}
-    </section>
+    <Card
+      className={cn(
+        "gap-4 border border-border ring-0 [--card-spacing:--spacing(5)]",
+        className,
+      )}
+    >
+      <CardHeader className="items-center">
+        <CardTitle
+          role="heading"
+          aria-level={2}
+          className="text-[0.8125rem] font-semibold tracking-[0.04em] text-muted-foreground uppercase"
+        >
+          {title}
+        </CardTitle>
+        {actions && <CardAction className="self-center">{actions}</CardAction>}
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4 text-base">
+        {children}
+      </CardContent>
+    </Card>
   );
 }

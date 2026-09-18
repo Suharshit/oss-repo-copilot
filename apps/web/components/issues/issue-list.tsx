@@ -2,7 +2,6 @@ import { GOOD_FIRST_ISSUE_LABEL } from "@repo/shared/constants";
 import type { IssuesResponse, RepoRef } from "@repo/shared/types";
 import { Section } from "../common/section";
 import { IssueRow } from "./issue-row";
-import styles from "./issue-list.module.css";
 
 interface IssueListProps {
   repo: RepoRef;
@@ -19,26 +18,30 @@ export function IssueList({ repo, response }: IssueListProps) {
       title={labelled ? "Good first issues" : "Open issues"}
       actions={
         issues.length > 0 && (
-          <span className={styles.count}>{issues.length}</span>
+          <span className="text-[0.8125rem] text-muted-foreground">
+            {issues.length}
+          </span>
         )
       }
     >
       {/* Without the label the ranking leans on comments and age alone, so say so. */}
       {!labelled && issues.length > 0 && (
-        <p className={styles.notice}>
+        <p className="text-sm/normal text-muted-foreground">
           Nothing here is labelled “{GOOD_FIRST_ISSUE_LABEL}”, so these are the
           most recent open issues, ranked by how approachable they look.
         </p>
       )}
 
       {issues.length > 0 ? (
-        <ol className={styles.list}>
+        <ol className="flex flex-col gap-3">
           {issues.map((issue) => (
             <IssueRow key={issue.number} repo={repo} issue={issue} />
           ))}
         </ol>
       ) : (
-        <p className={styles.notice}>This repo has no open issues right now.</p>
+        <p className="text-sm/normal text-muted-foreground">
+          This repo has no open issues right now.
+        </p>
       )}
     </Section>
   );

@@ -94,7 +94,7 @@ consumes it. No build step, no `dist`.
 
 ```
 src/
-  index.ts          server-safe root: types + utils + constants (no React)
+  index.ts          root: types + utils + constants (no React)
   types/
     repo.ts         Repo, RepoRef, RepoOverview, RepoModule, RepoConventions
     issue.ts        Issue, FriendlinessSignals, ContributionBrief, RelevantFile
@@ -105,8 +105,6 @@ src/
     format.ts       formatRelativeTime, truncate, overviewExpiry, isExpired
   constants/
     index.ts        API_ROUTES, ports, TTLs, FIRST_TIMER_LABELS, MANIFEST_FILES
-  ui/
-    button.tsx  card.tsx  code.tsx
 ```
 
 Entry points are split on purpose:
@@ -117,10 +115,10 @@ Entry points are split on purpose:
 | `@repo/shared/types`     | type-only                 | yes              |
 | `@repo/shared/utils`     | pure functions            | yes              |
 | `@repo/shared/constants` | literals                  | yes              |
-| `@repo/shared/ui/<name>` | React components          | **no**           |
 
-The root export deliberately does **not** re-export `ui`, so `apps/api` can
-`import from "@repo/shared"` without dragging React into its bundle.
+The package has no React code, so `apps/api` can import any entry point. UI
+components live in `apps/web/components` (shadcn/ui primitives in
+`components/ui`).
 
 ### `packages/eslint-config` / `packages/typescript-config`
 

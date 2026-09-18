@@ -1,12 +1,32 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Colors use shadcn/ui's token names so its components (components/ui) pick
+   them up. Dark mode follows the OS via prefers-color-scheme, which is also
+   Tailwind's default `dark:` variant, so there is no .dark class to toggle. */
 :root {
+  --radius: 0.625rem;
+
   --background: #ffffff;
   --foreground: #171717;
-  --muted: #666666;
+  --card: #fafafa;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #666666;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #c62828;
   --border: #e5e5e5;
-  --surface: #fafafa;
-  --danger: #c62828;
-  --danger-border: #f3c4c4;
-  --danger-surface: #fdf3f3;
+  --input: #e5e5e5;
+  --ring: #a3a3a3;
+
   /* Friendliness badges on the issue list. */
   --great: #1a7f37;
   --great-border: #b7e4c3;
@@ -20,12 +40,23 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --muted: #a1a1a1;
+    --card: #111111;
+    --card-foreground: #ededed;
+    --popover: #111111;
+    --popover-foreground: #ededed;
+    --primary: #ededed;
+    --primary-foreground: #0a0a0a;
+    --secondary: #1f1f1f;
+    --secondary-foreground: #ededed;
+    --muted: #1f1f1f;
+    --muted-foreground: #a1a1a1;
+    --accent: #1f1f1f;
+    --accent-foreground: #ededed;
+    --destructive: #ff7b72;
     --border: #2a2a2a;
-    --surface: #111111;
-    --danger: #ff7b72;
-    --danger-border: #5c2626;
-    --danger-surface: #1d1111;
+    --input: #2a2a2a;
+    --ring: #525252;
+
     --great: #3fb950;
     --great-border: #1f4a2a;
     --great-surface: #0f1f14;
@@ -39,65 +70,69 @@
   }
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+/* Exposes the tokens above as utilities (bg-card, text-muted-foreground…).
+   `inline` keeps them pointing at the variables, so dark mode still switches them. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-great: var(--great);
+  --color-great-border: var(--great-border);
+  --color-great-surface: var(--great-surface);
+  --color-good: var(--good);
+  --color-good-border: var(--good-border);
+  --color-good-surface: var(--good-surface);
+
+  /* next/font sets these variables on <html> (app/layout.tsx). */
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-heading: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
+  html,
+  body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
 
-code {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.9em;
-}
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 
-/* ---------------------------------------------------------------------------
-   @repo/shared components. They take a className and never carry their own
-   styles (Conventions), so the consuming app supplies them.
-   --------------------------------------------------------------------------- */
-
-.ui-button {
-  padding: 0.75rem 1.25rem;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-}
-
-.ui-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.ui-button:not(:disabled):hover {
-  opacity: 0.85;
-}
-
-.ui-button--primary {
-  background: var(--foreground);
-  color: var(--background);
-}
-
-.ui-button--secondary {
-  background: transparent;
-  color: var(--foreground);
-  border-color: var(--border);
+  code {
+    font-size: 0.9em;
+  }
 }

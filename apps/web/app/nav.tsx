@@ -1,5 +1,4 @@
 import Link from "next/link";
-import styles from "./nav.module.css";
 
 /**
  * Top-level navigation. The shell only — there are no authenticated routes
@@ -7,18 +6,26 @@ import styles from "./nav.module.css";
  */
 export function Nav() {
   return (
-    <nav className={styles.nav}>
-      <Link href="/" className={styles.brand}>
-        <span className={styles.mark} aria-hidden>
+    <nav className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
+      <Link
+        href="/"
+        className="flex items-center gap-2.5 font-semibold tracking-[-0.01em]"
+      >
+        {/* Logo placeholder — a real mark replaces this later. */}
+        <span
+          className="grid size-7 place-items-center rounded-lg bg-foreground text-sm font-bold text-background"
+          aria-hidden
+        >
           R
         </span>
         repo-onboarding-copilot
       </Link>
-      <div className={styles.links}>
+      <div className="flex gap-5 text-sm text-muted-foreground">
         <a
           href="https://github.com/Suharshit/oss-repo-copilot"
           target="_blank"
           rel="noopener noreferrer"
+          className="hover:text-foreground"
         >
           GitHub
         </a>

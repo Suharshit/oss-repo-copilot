@@ -2,10 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@repo/shared/ui/button";
 import { parseRepoUrl } from "@repo/shared/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { repoPagePath } from "../../lib/routes";
-import styles from "./repo-url-form.module.css";
 
 const INVALID_URL_MESSAGE =
   "Paste a public GitHub repo URL, e.g. https://github.com/owner/repo.";
@@ -35,12 +35,16 @@ export function RepoUrlForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.row}>
+    <form
+      className="mt-2 flex flex-col gap-2 text-left"
+      onSubmit={handleSubmit}
+      noValidate
+    >
+      <div className="flex gap-2 max-[30rem]:flex-col">
         {/* type="text", not "url": the browser's url check rejects
             "github.com/owner/name", which parseRepoUrl accepts. */}
-        <input
-          className={styles.input}
+        <Input
+          className="h-11 flex-1 bg-background px-3.5 md:text-base"
           type="text"
           inputMode="url"
           autoComplete="off"
@@ -56,12 +60,21 @@ export function RepoUrlForm() {
             if (error) setError(null);
           }}
         />
-        <Button type="submit" disabled={!value.trim() || navigating}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-11 px-5 text-base"
+          disabled={!value.trim() || navigating}
+        >
           {navigating ? "Opening…" : "Generate overview"}
         </Button>
       </div>
       {error && (
-        <p id="repo-url-error" role="alert" className={styles.error}>
+        <p
+          id="repo-url-error"
+          role="alert"
+          className="text-sm text-destructive"
+        >
           {error}
         </p>
       )}

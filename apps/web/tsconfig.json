@@ -8,7 +8,11 @@
     ],
     "strictNullChecks": true,
     // @repo/shared's source imports its own files with .ts extensions.
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // shadcn/ui components import each other through this alias.
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "**/*.ts",

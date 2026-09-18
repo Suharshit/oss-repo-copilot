@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import styles from "./error-state.module.css";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface ErrorStateProps {
   title: string;
@@ -17,13 +18,20 @@ export function ErrorState({
   className,
 }: ErrorStateProps) {
   return (
-    <div
-      role="alert"
-      className={[styles.error, className].filter(Boolean).join(" ")}
+    <Alert
+      variant="destructive"
+      className={cn(
+        "gap-2 rounded-xl border-destructive/30 bg-destructive/5 p-5",
+        className,
+      )}
     >
-      <h2 className={styles.title}>{title}</h2>
-      <p className={styles.message}>{message}</p>
-      {actions && <div className={styles.actions}>{actions}</div>}
-    </div>
+      <AlertTitle className="text-base font-semibold">{title}</AlertTitle>
+      <AlertDescription className="text-base/normal text-muted-foreground">
+        {message}
+      </AlertDescription>
+      {actions && (
+        <div className="mt-2 flex flex-wrap items-center gap-3">{actions}</div>
+      )}
+    </Alert>
   );
 }

@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import babelParser from "@babel/eslint-parser";
 import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
@@ -18,7 +19,12 @@ export const config = [
       parserOptions: {
         requireConfigFile: false,
         babelOptions: {
-          presets: ["@babel/preset-typescript"],
+          // Resolved from this package, not the linted app: a bare name is
+          // looked up from the app's cwd and can hit another Babel major
+          // hoisted by an unrelated dependency (e.g. the shadcn CLI).
+          presets: [
+            fileURLToPath(import.meta.resolve("@babel/preset-typescript")),
+          ],
         },
       },
     },
