@@ -4,7 +4,6 @@ import { formatRelativeTime } from "@repo/shared/utils";
 import { issuePagePath } from "../../lib/routes";
 import { TagList } from "../common/tag-list";
 import { FriendlinessBadge } from "./friendliness-badge";
-import styles from "./issue-row.module.css";
 
 interface IssueRowProps {
   repo: RepoRef;
@@ -17,25 +16,31 @@ export function IssueRow({ repo, issue }: IssueRowProps) {
     issue.commentCount === 1 ? "1 comment" : `${issue.commentCount} comments`;
 
   return (
-    <li className={styles.row}>
+    <li className="relative flex flex-col items-start gap-2 rounded-[0.625rem] border border-border bg-background p-4 transition-colors duration-150 focus-within:border-muted hover:border-muted">
       <FriendlinessBadge score={issue.friendlinessScore} />
 
-      <h3 className={styles.title}>
-        {/* Its ::after stretches over the row, so the whole card is the link. */}
-        <Link className={styles.link} href={issuePagePath(repo, issue.number)}>
-          <span className={styles.number}>#{issue.number}</span> {issue.title}
+      <h3 className="text-base/[1.4] font-medium wrap-anywhere">
+        {/* Its ::after stretches over the row, so the whole card is the link,
+            and carries the focus ring so it outlines the whole card. */}
+        <Link
+          className="outline-none after:absolute after:inset-0 after:rounded-[inherit] focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-foreground"
+          href={issuePagePath(repo, issue.number)}
+        >
+          <span className="font-normal text-muted">#{issue.number}</span>{" "}
+          {issue.title}
         </Link>
       </h3>
 
-      <TagList tags={issue.labels} label="Labels" className={styles.labels} />
+      <TagList tags={issue.labels} label="Labels" className="[&>li]:text-xs" />
 
-      <p className={styles.meta}>
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-muted">
         <span title={new Date(issue.createdAt).toLocaleString()}>
           Opened {formatRelativeTime(issue.createdAt)}
         </span>
         <span>{comments}</span>
+        {/* Sits above the row's stretched link so it stays clickable on its own. */}
         <a
-          className={styles.github}
+          className="relative z-1 hover:text-foreground hover:underline"
           href={issue.url}
           target="_blank"
           rel="noopener noreferrer"

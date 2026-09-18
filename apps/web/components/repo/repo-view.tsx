@@ -10,7 +10,6 @@ import { IssuesPanel } from "../issues/issues-panel";
 import { RepoMeta } from "../overview/repo-meta";
 import { RepoOverview } from "../overview/repo-overview";
 import { RepoHeader } from "./repo-header";
-import styles from "./repo-view.module.css";
 
 interface RepoViewProps {
   repoRef: RepoRef;
@@ -55,7 +54,7 @@ export function RepoView({ repoRef, initialTab }: RepoViewProps) {
   );
 
   return (
-    <div className={styles.stack}>
+    <div className="flex flex-col gap-6">
       <RepoHeader
         repo={repoRef}
         meta={data && <RepoMeta response={data} />}

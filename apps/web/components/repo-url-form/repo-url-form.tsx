@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@repo/shared/ui/button";
 import { parseRepoUrl } from "@repo/shared/utils";
 import { repoPagePath } from "../../lib/routes";
-import styles from "./repo-url-form.module.css";
 
 const INVALID_URL_MESSAGE =
   "Paste a public GitHub repo URL, e.g. https://github.com/owner/repo.";
@@ -35,12 +34,16 @@ export function RepoUrlForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.row}>
+    <form
+      className="mt-2 flex flex-col gap-2 text-left"
+      onSubmit={handleSubmit}
+      noValidate
+    >
+      <div className="flex gap-2 max-[30rem]:flex-col">
         {/* type="text", not "url": the browser's url check rejects
             "github.com/owner/name", which parseRepoUrl accepts. */}
         <input
-          className={styles.input}
+          className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3.5 py-3 text-foreground focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-foreground aria-invalid:border-danger"
           type="text"
           inputMode="url"
           autoComplete="off"
@@ -61,7 +64,7 @@ export function RepoUrlForm() {
         </Button>
       </div>
       {error && (
-        <p id="repo-url-error" role="alert" className={styles.error}>
+        <p id="repo-url-error" role="alert" className="text-sm text-danger">
           {error}
         </p>
       )}

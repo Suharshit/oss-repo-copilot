@@ -1,5 +1,3 @@
-import styles from "./tag-list.module.css";
-
 interface TagListProps {
   tags: string[];
   /** Accessible name for the list, e.g. "Tech stack" or "Issue labels". */
@@ -13,11 +11,14 @@ export function TagList({ tags, label, className }: TagListProps) {
 
   return (
     <ul
-      className={[styles.list, className].filter(Boolean).join(" ")}
+      className={["flex flex-wrap gap-2", className].filter(Boolean).join(" ")}
       aria-label={label}
     >
       {tags.map((tag) => (
-        <li key={tag} className={styles.tag}>
+        <li
+          key={tag}
+          className="rounded-full border border-border px-2.5 py-1 text-[0.8125rem]/[1.4]"
+        >
           {tag}
         </li>
       ))}

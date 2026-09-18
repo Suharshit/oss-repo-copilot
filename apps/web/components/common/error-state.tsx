@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import styles from "./error-state.module.css";
 
 interface ErrorStateProps {
   title: string;
@@ -19,11 +18,18 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className={[styles.error, className].filter(Boolean).join(" ")}
+      className={[
+        "flex flex-col gap-2 rounded-xl border border-danger-border bg-danger-surface p-5",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
-      <h2 className={styles.title}>{title}</h2>
-      <p className={styles.message}>{message}</p>
-      {actions && <div className={styles.actions}>{actions}</div>}
+      <h2 className="text-base font-semibold">{title}</h2>
+      <p className="leading-normal text-muted">{message}</p>
+      {actions && (
+        <div className="mt-2 flex flex-wrap items-center gap-3">{actions}</div>
+      )}
     </div>
   );
 }

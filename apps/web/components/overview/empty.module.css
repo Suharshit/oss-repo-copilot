@@ -1,5 +1,0 @@
-/* Shared "nothing to show" line for overview sections. */
-.empty {
-  font-size: 0.875rem;
-  color: var(--muted);
-}

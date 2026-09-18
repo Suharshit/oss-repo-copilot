@@ -1,6 +1,5 @@
 import { Section } from "../common/section";
 import { TagList } from "../common/tag-list";
-import styles from "./empty.module.css";
 
 interface TechStackSectionProps {
   techStack: string[];
@@ -12,7 +11,7 @@ export function TechStackSection({ techStack }: TechStackSectionProps) {
       {techStack.length > 0 ? (
         <TagList tags={techStack} label="Tech stack" />
       ) : (
-        <p className={styles.empty}>No tech stack could be identified.</p>
+        <p className="text-sm text-muted">No tech stack could be identified.</p>
       )}
     </Section>
   );

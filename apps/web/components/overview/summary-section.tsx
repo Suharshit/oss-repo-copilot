@@ -1,5 +1,4 @@
 import { Section } from "../common/section";
-import styles from "./summary-section.module.css";
 
 interface SummarySectionProps {
   summary: string;
@@ -8,7 +7,8 @@ interface SummarySectionProps {
 export function SummarySection({ summary }: SummarySectionProps) {
   return (
     <Section title="What this repo does">
-      <p className={styles.summary}>{summary}</p>
+      {/* pre-line keeps the model's paragraph breaks without rendering markdown. */}
+      <p className="leading-[1.65] whitespace-pre-line">{summary}</p>
     </Section>
   );
 }

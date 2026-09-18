@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import styles from "./section.module.css";
 
 interface SectionProps {
   title: string;
@@ -12,9 +11,18 @@ interface SectionProps {
 /** A titled card. Every block on a repo page (overview, issues, brief) is one. */
 export function Section({ title, actions, className, children }: SectionProps) {
   return (
-    <section className={[styles.section, className].filter(Boolean).join(" ")}>
-      <header className={styles.header}>
-        <h2 className={styles.title}>{title}</h2>
+    <section
+      className={[
+        "flex flex-col gap-4 rounded-xl border border-border bg-surface p-5",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <header className="flex items-center justify-between gap-4">
+        <h2 className="text-[0.8125rem] font-semibold tracking-[0.04em] text-muted uppercase">
+          {title}
+        </h2>
         {actions}
       </header>
       {children}

@@ -9,8 +9,6 @@ import {
   parseRepoParams,
   repoPagePath,
 } from "../../../../../../lib/routes";
-import repoStyles from "../../page.module.css";
-import styles from "./page.module.css";
 
 /**
  * An issue's page, /r/[owner]/[name]/issues/[number]. Rows in the issue list
@@ -26,21 +24,24 @@ export default async function IssuePage({
   if (!ref || number === null) notFound();
 
   return (
-    <div className={repoStyles.page}>
-      <main className={`${repoStyles.main} ${styles.stack}`}>
-        <Link href={repoPagePath(ref, "issues")} className={styles.back}>
+    <div className="flex justify-center px-4 pt-10 pb-16">
+      <main className="flex w-full max-w-208 flex-col gap-6">
+        <Link
+          href={repoPagePath(ref, "issues")}
+          className="w-fit text-sm text-muted hover:text-foreground hover:underline"
+        >
           ← All issues
         </Link>
 
         <RepoHeader repo={ref} />
 
         <Section title={`Issue #${number}`}>
-          <p className={styles.text}>
+          <p className="text-[0.9375rem]/[1.55] text-muted">
             Contribution briefs are on the way. Soon this page will show the
             files to look at and a suggested approach for this issue.
           </p>
           <a
-            className={styles.github}
+            className="w-fit text-sm hover:underline"
             href={issueUrl({ ...ref, number })}
             target="_blank"
             rel="noopener noreferrer"

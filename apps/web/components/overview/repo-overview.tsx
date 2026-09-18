@@ -10,7 +10,6 @@ import { ModulesSection } from "./modules-section";
 import { OverviewSkeleton } from "./overview-skeleton";
 import { SummarySection } from "./summary-section";
 import { TechStackSection } from "./tech-stack-section";
-import styles from "./repo-overview.module.css";
 
 interface RepoOverviewProps {
   /** Owned by RepoView, which also shows the overview's meta and Regenerate in the header. */
@@ -22,7 +21,7 @@ export function RepoOverview({ state }: RepoOverviewProps) {
   const { data, error, pending, reload } = state;
 
   return (
-    <div className={styles.stack}>
+    <div className="flex flex-col gap-4">
       {/* A failed regenerate keeps the old overview on screen below the error. */}
       {error && (
         <ErrorState
@@ -36,7 +35,10 @@ export function RepoOverview({ state }: RepoOverviewProps) {
                   Try again
                 </Button>
               )}
-              <Link href="/" className={styles.backLink}>
+              <Link
+                href="/"
+                className="text-sm text-muted hover:text-foreground hover:underline"
+              >
                 Try another repo
               </Link>
             </>
@@ -47,8 +49,9 @@ export function RepoOverview({ state }: RepoOverviewProps) {
       {pending && !data && <OverviewSkeleton />}
 
       {data && (
+        // Dimmed while a regenerate is in flight.
         <div
-          className={styles.sections}
+          className="flex flex-col gap-4 transition-opacity duration-200 data-stale:opacity-55"
           aria-busy={pending}
           data-stale={pending || undefined}
         >

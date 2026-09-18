@@ -1,5 +1,3 @@
-import styles from "./skeleton.module.css";
-
 interface SkeletonProps {
   /** CSS width, e.g. "60%" or "8rem". */
   width?: string;
@@ -16,7 +14,12 @@ export function Skeleton({
   return (
     <span
       aria-hidden
-      className={[styles.skeleton, className].filter(Boolean).join(" ")}
+      className={[
+        "block animate-shimmer rounded-md bg-linear-to-r from-border from-25% via-surface via-50% to-border to-75% bg-size-[200%_100%] motion-reduce:animate-none",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       style={{ width, height }}
     />
   );
