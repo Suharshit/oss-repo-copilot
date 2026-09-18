@@ -106,7 +106,7 @@ src/
   constants/
     index.ts        API_ROUTES, ports, TTLs, FIRST_TIMER_LABELS, MANIFEST_FILES
   ui/
-    button.tsx  card.tsx  code.tsx
+    card.tsx  code.tsx
 ```
 
 Entry points are split on purpose:

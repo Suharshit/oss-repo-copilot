@@ -64,14 +64,18 @@ Reference spec sections (`spec §6`) and user stories (`US-2`) where it helps.
 
 ## Styling patterns
 
-- **CSS Modules** in `apps/web` (`page.module.css`), plus `app/globals.css`.
-  No Tailwind, no CSS-in-JS.
-- Shared components take a `className` prop and merge it; they never hardcode
-  layout or positioning. Colors and spacing are the consuming app's business.
-- Component variants are a `variant` prop mapped to a BEM-ish class
-  (`ui-button ui-button--secondary`), not a style object.
-- `"use client"` only where interactivity actually requires it —
-  `button.tsx` has it, `card.tsx` and `code.tsx` do not.
+- **Tailwind CSS v4** utility classes inline in `apps/web` components; no CSS
+  Modules, no CSS-in-JS. `app/globals.css` holds only the theme tokens and
+  base styles.
+- **shadcn/ui** primitives live in `apps/web/components/ui` (Button, Card,
+  Badge, Tabs, Input, Alert, Skeleton). App components compose them rather
+  than restyling raw elements; add new ones with `pnpm dlx shadcn@latest add`.
+- Colors use shadcn token names (`text-muted-foreground`, `bg-card`,
+  `text-destructive`…). Dark mode follows `prefers-color-scheme`.
+- Merge class names with `cn` from `@/lib/utils`.
+- Shared components in `@repo/shared/ui` take a `className` prop and merge it;
+  they never hardcode layout or positioning.
+- `"use client"` only where interactivity actually requires it.
 - Fonts are local (`next/font/local`, Geist), not fetched from a CDN.
 
 ## API consistency
