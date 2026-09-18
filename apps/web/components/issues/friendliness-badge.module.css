@@ -1,0 +1,33 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.great {
+  border-color: var(--great-border);
+  background: var(--great-surface);
+  color: var(--great);
+}
+
+.good {
+  border-color: var(--good-border);
+  background: var(--good-surface);
+  color: var(--good);
+}
+
+.score {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}

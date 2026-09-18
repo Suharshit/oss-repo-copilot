@@ -1,0 +1,31 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.back {
+  width: fit-content;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.back:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+.text {
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.github {
+  width: fit-content;
+  font-size: 0.875rem;
+}
+
+.github:hover {
+  text-decoration: underline;
+}

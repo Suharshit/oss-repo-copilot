@@ -1,4 +1,4 @@
-import type { Issue, ContributionBrief } from "./issue.ts";
+import type { ContributionBrief, Issue, IssueSummary } from "./issue.ts";
 import type { Repo, RepoConventions, RepoOverview } from "./repo.ts";
 
 /** Every apps/api response is one of these two shapes. */
@@ -43,8 +43,15 @@ export interface OverviewResponse {
 
 export interface IssuesResponse {
   repo: Repo;
-  issues: Issue[];
+  issues: IssueSummary[];
+  /**
+   * Which query produced `issues`: open issues labelled GOOD_FIRST_ISSUE_LABEL,
+   * or — when the repo has none — its most recent open issues.
+   */
+  source: IssueListSource;
 }
+
+export type IssueListSource = "labelled" | "recent";
 
 export interface BriefRequest {
   /** Issue URL as pasted by the user. */

@@ -1,0 +1,68 @@
+.row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--background);
+  transition: border-color 0.15s ease;
+}
+
+.row:hover,
+.row:focus-within {
+  border-color: var(--muted);
+}
+
+.title {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.link:focus-visible {
+  outline: none;
+}
+
+.row:has(.link:focus-visible) {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.number {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.labels li {
+  font-size: 0.75rem;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* Sits above the row's stretched link so it stays clickable on its own. */
+.github {
+  position: relative;
+  z-index: 1;
+}
+
+.github:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}

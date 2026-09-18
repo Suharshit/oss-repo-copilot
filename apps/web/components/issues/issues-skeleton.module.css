@@ -1,0 +1,20 @@
+.notice {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+}

@@ -1,6 +1,7 @@
 import {
   DOC_FILES,
   GITHUB_API_BASE,
+  GOOD_FIRST_ISSUE_LABEL,
   MANIFEST_FILES,
   MAX_FILE_CHARS,
   MAX_ISSUES_PER_REPO,
@@ -12,7 +13,13 @@ import {
   repoId,
   truncate,
 } from "@repo/shared";
-import type { Issue, Repo, RepoRef } from "@repo/shared/types";
+import type {
+  Issue,
+  IssueListSource,
+  IssueSummary,
+  Repo,
+  RepoRef,
+} from "@repo/shared/types";
 import { env } from "../env.js";
 import { HttpError } from "../lib/errors.js";
 
@@ -68,19 +75,51 @@ export async function fetchRepo(ref: RepoRef): Promise<Repo> {
   };
 }
 
-/** Open issues for a repo, scored and sorted most-approachable first (US-2). */
-export async function fetchScoredIssues(ref: RepoRef): Promise<Issue[]> {
-  const data = await githubRequest<GitHubIssueResponse[]>(
-    `/repos/${ref.owner}/${ref.name}/issues?state=open&per_page=${MAX_ISSUES_PER_REPO}`,
-  );
+/** The ranked issue list, and which query filled it. */
+export interface ScoredIssues {
+  issues: IssueSummary[];
+  source: IssueListSource;
+}
 
-  return (
-    data
-      // The issues endpoint also returns PRs; they are not contribution targets.
-      .filter((raw) => !raw.pull_request)
-      .map((raw) => toIssue(ref, raw))
-      .sort((a, b) => b.friendlinessScore - a.friendlinessScore)
+/**
+ * Open issues for a repo, scored and sorted most-approachable first (US-2).
+ *
+ * Asks GitHub for GOOD_FIRST_ISSUE_LABEL first. Unfiltered, the endpoint only
+ * returns the newest MAX_ISSUES_PER_REPO issues, so on a busy repo older
+ * labelled issues never made the list. Repos that don't use the label fall
+ * back to their most recent open issues rather than an empty page.
+ */
+export async function fetchScoredIssues(ref: RepoRef): Promise<ScoredIssues> {
+  const labelled = await fetchOpenIssues(ref, GOOD_FIRST_ISSUE_LABEL);
+  if (labelled.length > 0) {
+    return { issues: rankIssues(ref, labelled), source: "labelled" };
+  }
+
+  const recent = await fetchOpenIssues(ref);
+  return { issues: rankIssues(ref, recent), source: "recent" };
+}
+
+async function fetchOpenIssues(
+  ref: RepoRef,
+  label?: string,
+): Promise<GitHubIssueResponse[]> {
+  const query = new URLSearchParams({
+    state: "open",
+    per_page: String(MAX_ISSUES_PER_REPO),
+  });
+  if (label) query.set("labels", label);
+
+  const data = await githubRequest<GitHubIssueResponse[]>(
+    `/repos/${ref.owner}/${ref.name}/issues?${query}`,
   );
+  // The issues endpoint also returns PRs; they are not contribution targets.
+  return data.filter((raw) => !raw.pull_request);
+}
+
+function rankIssues(ref: RepoRef, data: GitHubIssueResponse[]): IssueSummary[] {
+  return data
+    .map((raw) => toIssueSummary(ref, raw))
+    .sort((a, b) => b.friendlinessScore - a.friendlinessScore);
 }
 
 /** One issue by number. Unlike the list endpoint this also finds closed ones. */
@@ -297,6 +336,20 @@ function toIssue(ref: RepoRef, raw: GitHubIssueResponse): Issue {
       ageInDays: daysSince(raw.created_at),
       claimed: raw.assignee != null,
     }),
+  };
+}
+
+/** Only the fields an issue row shows; the full Issue is for the brief. */
+function toIssueSummary(ref: RepoRef, raw: GitHubIssueResponse): IssueSummary {
+  const issue = toIssue(ref, raw);
+  return {
+    number: issue.number,
+    title: issue.title,
+    url: issue.url,
+    labels: issue.labels,
+    commentCount: issue.commentCount,
+    createdAt: issue.createdAt,
+    friendlinessScore: issue.friendlinessScore,
   };
 }
 

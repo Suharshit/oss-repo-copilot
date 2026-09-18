@@ -1,5 +1,8 @@
-import { FIRST_TIMER_LABELS } from "../constants/index.ts";
-import type { FriendlinessSignals } from "../types/issue.ts";
+import {
+  FIRST_TIMER_LABELS,
+  FRIENDLINESS_TIER_THRESHOLDS,
+} from "../constants/index.ts";
+import type { FriendlinessSignals, FriendlinessTier } from "../types/issue.ts";
 
 const CLAIM_PHRASES = [
   "i'll take this",
@@ -41,6 +44,13 @@ export function friendlinessScore(signals: FriendlinessSignals): number {
     (claimed ? 0.4 : 0);
 
   return clamp(Number(raw.toFixed(3)), 0, 1);
+}
+
+/** Bucket a score for display, so the UI shows a verdict rather than a bare number. */
+export function friendlinessTier(score: number): FriendlinessTier {
+  if (score >= FRIENDLINESS_TIER_THRESHOLDS.great) return "great";
+  if (score >= FRIENDLINESS_TIER_THRESHOLDS.good) return "good";
+  return "tricky";
 }
 
 /** Cheap check for "someone already called dibs" in the issue thread. */

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, describe, it, mock } from "node:test";
 import { MAX_MANIFEST_FILES } from "@repo/shared/constants";
 import {
+  fetchScoredIssues,
   selectContributing,
   selectDocPaths,
   selectManifestPaths,
@@ -112,5 +113,120 @@ describe("selectContributing", () => {
     // prompt states rather than a blank section it fills in.
     assert.equal(selectContributing({ "CODE_OF_CONDUCT.md": "be nice" }), null);
     assert.equal(selectContributing({}), null);
+  });
+});
+
+/**
+ * fetchScoredIssues against a stubbed fetch: which queries it sends, and what
+ * it keeps from GitHub's issue payload.
+ */
+describe("fetchScoredIssues", () => {
+  const ref = { owner: "acme", name: "widgets" };
+
+  function rawIssue(number: number, extra: Record<string, unknown> = {}) {
+    return {
+      number,
+      title: `Issue ${number}`,
+      body: "A long body the list never shows.",
+      state: "open",
+      comments: 0,
+      html_url: `https://github.com/acme/widgets/issues/${number}`,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      labels: [],
+      assignee: null,
+      ...extra,
+    };
+  }
+
+  /** Answers the labelled query with `labelled` and the plain one with `recent`. */
+  function stubGitHub(labelled: unknown[], recent: unknown[]) {
+    const urls: URL[] = [];
+    mock.method(globalThis, "fetch", async (input: string) => {
+      const url = new URL(input);
+      urls.push(url);
+      const body = url.searchParams.has("labels") ? labelled : recent;
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+    return urls;
+  }
+
+  afterEach(() => mock.restoreAll());
+
+  it("queries by the good first issue label and stops when it finds some", async () => {
+    const urls = stubGitHub(
+      [rawIssue(7, { labels: [{ name: "good first issue" }] })],
+      [rawIssue(1)],
+    );
+
+    const result = await fetchScoredIssues(ref);
+
+    assert.equal(result.source, "labelled");
+    assert.deepEqual(
+      result.issues.map((issue) => issue.number),
+      [7],
+    );
+    assert.equal(urls.length, 1);
+    assert.equal(urls[0]?.searchParams.get("labels"), "good first issue");
+  });
+
+  it("falls back to recent open issues when nothing carries the label", async () => {
+    const urls = stubGitHub([], [rawIssue(1), rawIssue(2)]);
+
+    const result = await fetchScoredIssues(ref);
+
+    assert.equal(result.source, "recent");
+    assert.equal(result.issues.length, 2);
+    assert.equal(urls.length, 2);
+    assert.equal(urls[1]?.searchParams.has("labels"), false);
+  });
+
+  it("drops pull requests before deciding whether the label matched", async () => {
+    // A labelled PR alone must not stop the fallback and leave the list empty.
+    stubGitHub(
+      [rawIssue(3, { pull_request: {}, labels: ["good first issue"] })],
+      [rawIssue(4)],
+    );
+
+    const result = await fetchScoredIssues(ref);
+
+    assert.equal(result.source, "recent");
+    assert.deepEqual(
+      result.issues.map((issue) => issue.number),
+      [4],
+    );
+  });
+
+  it("returns only the fields an issue row shows", async () => {
+    stubGitHub([rawIssue(5, { labels: ["good first issue"] })], []);
+
+    const [issue] = (await fetchScoredIssues(ref)).issues;
+
+    assert.deepEqual(Object.keys(issue ?? {}).sort(), [
+      "commentCount",
+      "createdAt",
+      "friendlinessScore",
+      "labels",
+      "number",
+      "title",
+      "url",
+    ]);
+  });
+
+  it("ranks the most approachable issue first", async () => {
+    stubGitHub(
+      [
+        rawIssue(1, { labels: ["good first issue"], comments: 18 }),
+        rawIssue(2, { labels: ["good first issue"] }),
+      ],
+      [],
+    );
+
+    const { issues } = await fetchScoredIssues(ref);
+
+    assert.deepEqual(
+      issues.map((issue) => issue.number),
+      [2, 1],
+    );
   });
 });

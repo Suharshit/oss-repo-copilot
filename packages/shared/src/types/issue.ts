@@ -17,6 +17,24 @@ export interface Issue {
   friendlinessScore: number;
 }
 
+/**
+ * The slice of an Issue the ranked list shows (US-2). The list endpoint
+ * returns up to MAX_ISSUES_PER_REPO of these, so bodies stay out of it.
+ */
+export type IssueSummary = Pick<
+  Issue,
+  | "number"
+  | "title"
+  | "url"
+  | "labels"
+  | "commentCount"
+  | "createdAt"
+  | "friendlinessScore"
+>;
+
+/** How approachable an issue looks, bucketed from its friendliness score. */
+export type FriendlinessTier = "great" | "good" | "tricky";
+
 /** The inputs the friendliness heuristic runs on, kept explicit so the score is testable. */
 export interface FriendlinessSignals {
   labels: string[];

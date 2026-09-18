@@ -4,6 +4,7 @@ import {
   clamp,
   daysSince,
   friendlinessScore,
+  friendlinessTier,
   looksClaimed,
 } from "./friendliness.ts";
 
@@ -84,6 +85,27 @@ describe("looksClaimed", () => {
   it("does not fire on ordinary discussion", () => {
     assert.equal(looksClaimed(["This also happens on Windows."]), false);
     assert.equal(looksClaimed([]), false);
+  });
+});
+
+describe("friendlinessTier", () => {
+  const base = { labels: [], commentCount: 0, ageInDays: 30, claimed: false };
+
+  it("calls a quiet, labelled issue great", () => {
+    const score = friendlinessScore({ ...base, labels: ["good first issue"] });
+    assert.equal(friendlinessTier(score), "great");
+  });
+
+  it("never calls an unlabelled issue great", () => {
+    // Unlabelled issues top out at 0.5, below the "good" cut-off too.
+    assert.equal(friendlinessTier(friendlinessScore(base)), "tricky");
+  });
+
+  it("puts each threshold in the higher tier", () => {
+    assert.equal(friendlinessTier(0.8), "great");
+    assert.equal(friendlinessTier(0.799), "good");
+    assert.equal(friendlinessTier(0.6), "good");
+    assert.equal(friendlinessTier(0.599), "tricky");
   });
 });
 
