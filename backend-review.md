@@ -21,12 +21,12 @@ expensive and what blocks the caching the spec assumes.
 
 ## 2. Endpoint status
 
-| Endpoint | State | What happens today |
-| -------- | ----- | ------------------ |
-| `GET /health` | ✅ Complete | Returns status, service name, uptime |
-| `GET /v1/issues` | ✅ Complete | Live GitHub fetch, PRs filtered, scored, ranked |
+| Endpoint            | State              | What happens today                                      |
+| ------------------- | ------------------ | ------------------------------------------------------- |
+| `GET /health`       | ✅ Complete        | Returns status, service name, uptime                    |
+| `GET /v1/issues`    | ✅ Complete        | Live GitHub fetch, PRs filtered, scored, ranked         |
 | `POST /v1/overview` | ⚠️ Works, uncached | Full GitHub read + Gemini generation, 6–26s, every time |
-| `POST /v1/brief` | ❌ Always 500 | Validates, fetches, then hits a deliberate stub |
+| `POST /v1/brief`    | ❌ Always 500      | Validates, fetches, then hits a deliberate stub         |
 
 ---
 
@@ -55,12 +55,12 @@ The score is a deterministic heuristic in
 [packages/shared/src/utils/friendliness.ts](packages/shared/src/utils/friendliness.ts) —
 not an LLM call. It weighs four signals:
 
-| Signal | Weight | Effect |
-| ------ | ------ | ------ |
-| First-timer label | 0.5 | Earlier entries in `FIRST_TIMER_LABELS` score higher |
-| Comment count | 0.3 | Long threads mean contested or subtle |
-| Age | 0.2 | Under 3 days may be untriaged, over a year is often stale |
-| Claimed (assignee) | −0.4 | Someone already called dibs |
+| Signal             | Weight | Effect                                                    |
+| ------------------ | ------ | --------------------------------------------------------- |
+| First-timer label  | 0.5    | Earlier entries in `FIRST_TIMER_LABELS` score higher      |
+| Comment count      | 0.3    | Long threads mean contested or subtle                     |
+| Age                | 0.2    | Under 3 days may be untriaged, over a year is often stale |
+| Claimed (assignee) | −0.4   | Someone already called dibs                               |
 
 **Complete for v1.** Two things worth knowing, neither a defect:
 
@@ -96,13 +96,13 @@ This is the newest work and the deepest path in the system. What runs today:
 
 #### What is still wrong with it
 
-| Problem | Where | Impact |
-| ------- | ----- | ------ |
-| **No cache** | [overview.ts:21](apps/api/src/routes/overview.ts#L21) | Every request pays ~15 GitHub calls + a full Gemini generation. `cached` is hardcoded `false` at [line 46](apps/api/src/routes/overview.ts#L46) |
-| **`conventions` always `null`** | [overview.ts:43](apps/api/src/routes/overview.ts#L43) | US-4 is unimplemented. The docs are *already fetched* and then thrown away |
-| **`refresh` flag ignored** | `OverviewRequest.refresh` | Defined in the shared types, read by nothing — it only means something once a cache exists |
-| **6–26 seconds per request** | Gemini | All of it generation. The spec accepts a synchronous blocking call (D-02), but this is the cost of no cache |
-| **No retry on 503** | [llm.ts](apps/api/src/services/llm.ts) | Gemini returns "high demand" 503s intermittently. Mapped cleanly to 502, but the user just sees a failure |
+| Problem                         | Where                                                 | Impact                                                                                                                                          |
+| ------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No cache**                    | [overview.ts:21](apps/api/src/routes/overview.ts#L21) | Every request pays ~15 GitHub calls + a full Gemini generation. `cached` is hardcoded `false` at [line 46](apps/api/src/routes/overview.ts#L46) |
+| **`conventions` always `null`** | [overview.ts:43](apps/api/src/routes/overview.ts#L43) | US-4 is unimplemented. The docs are _already fetched_ and then thrown away                                                                      |
+| **`refresh` flag ignored**      | `OverviewRequest.refresh`                             | Defined in the shared types, read by nothing — it only means something once a cache exists                                                      |
+| **6–26 seconds per request**    | Gemini                                                | All of it generation. The spec accepts a synchronous blocking call (D-02), but this is the cost of no cache                                     |
+| **No retry on 503**             | [llm.ts](apps/api/src/services/llm.ts)                | Gemini returns "high demand" 503s intermittently. Mapped cleanly to 502, but the user just sees a failure                                       |
 
 The `conventions` gap is the cheap one: `context.docs` already holds
 CONTRIBUTING.md and the PR template on every request. Only the extraction step
@@ -151,11 +151,11 @@ has simply not been switched over — it is close to a one-line change.
 
 ## 3. Service layer
 
-| Module | State |
-| ------ | ----- |
-| [services/github.ts](apps/api/src/services/github.ts) | ✅ Complete for v1 |
-| [services/llm.ts](apps/api/src/services/llm.ts) | ⚠️ Half — overview real, brief stubbed |
-| `services/db.ts` | ❌ **Does not exist** |
+| Module                                                | State                                  |
+| ----------------------------------------------------- | -------------------------------------- |
+| [services/github.ts](apps/api/src/services/github.ts) | ✅ Complete for v1                     |
+| [services/llm.ts](apps/api/src/services/llm.ts)       | ⚠️ Half — overview real, brief stubbed |
+| `services/db.ts`                                      | ❌ **Does not exist**                  |
 
 ### github.ts — done
 
@@ -194,14 +194,14 @@ Everything is in place except the client code.
 
 ## 4. Not built at all
 
-| Thing | Why it matters |
-| ----- | -------------- |
-| **Database layer** | Blocks caching, which is the whole cost model (spec §6) |
-| **Rate limiting** (OQ-2) | With no login (D-01), this is the *only* abuse control. Must exist before anything is public |
-| **Tests** | Zero. `selectManifestPaths`, `selectDocPaths` and `friendlinessScore` are pure and were written to be testable without a network — obvious first targets |
-| **Deployment** (OQ-4) | No Vercel/Workers handler committed. Undecided by design |
-| **Conventions extraction** (US-4) | Docs are fetched then discarded |
-| **README badge** (US-5) | Not started, lowest priority |
+| Thing                             | Why it matters                                                                                                                                           |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database layer**                | Blocks caching, which is the whole cost model (spec §6)                                                                                                  |
+| **Rate limiting** (OQ-2)          | With no login (D-01), this is the _only_ abuse control. Must exist before anything is public                                                             |
+| **Tests**                         | Zero. `selectManifestPaths`, `selectDocPaths` and `friendlinessScore` are pure and were written to be testable without a network — obvious first targets |
+| **Deployment** (OQ-4)             | No Vercel/Workers handler committed. Undecided by design                                                                                                 |
+| **Conventions extraction** (US-4) | Docs are fetched then discarded                                                                                                                          |
+| **README badge** (US-5)           | Not started, lowest priority                                                                                                                             |
 
 ---
 
@@ -278,15 +278,15 @@ error cases, and runs headless with
 [env.ts](apps/api/src/env.ts), because there is no dotenv dependency and neither
 `tsx` nor `node` reads `.env` on its own.
 
-| Variable | Status |
-| -------- | ------ |
-| `GITHUB_TOKEN` | Used — raises rate limits |
-| `GEMINI_API_KEY` | Used — overview generation |
-| `MODEL` | Used — `gemini-3.6-flash`. Note `gemini-2.5-flash` is closed to new keys |
-| `SUPABASE_URL` | Parsed at boot, **read by nothing** |
-| `SUPABASE_SECRET_KEY` | Parsed at boot, **read by nothing** |
-| `CORS_ORIGINS` | Used |
-| `PORT` | Used |
+| Variable              | Status                                                                   |
+| --------------------- | ------------------------------------------------------------------------ |
+| `GITHUB_TOKEN`        | Used — raises rate limits                                                |
+| `GEMINI_API_KEY`      | Used — overview generation                                               |
+| `MODEL`               | Used — `gemini-3.6-flash`. Note `gemini-2.5-flash` is closed to new keys |
+| `SUPABASE_URL`        | Parsed at boot, **read by nothing**                                      |
+| `SUPABASE_SECRET_KEY` | Parsed at boot, **read by nothing**                                      |
+| `CORS_ORIGINS`        | Used                                                                     |
+| `PORT`                | Used                                                                     |
 
 ---
 
@@ -302,14 +302,14 @@ Every response is one of two shapes:
 Codes map to statuses in
 [apps/api/src/lib/errors.ts](apps/api/src/lib/errors.ts):
 
-| Code | Status | Raised when |
-| ---- | ------ | ----------- |
-| `bad_request` | 400 | Body is not JSON |
-| `invalid_github_url` | 400 | URL is not a parseable GitHub repo/issue URL |
-| `not_found` | 404 | Unknown repo or issue, or unknown route |
-| `rate_limited` | 429 | GitHub or Gemini rate limit |
-| `upstream_error` | 502 | GitHub or Gemini failed |
-| `internal_error` | 500 | Unhandled, or a stub that is not wired up yet |
+| Code                 | Status | Raised when                                   |
+| -------------------- | ------ | --------------------------------------------- |
+| `bad_request`        | 400    | Body is not JSON                              |
+| `invalid_github_url` | 400    | URL is not a parseable GitHub repo/issue URL  |
+| `not_found`          | 404    | Unknown repo or issue, or unknown route       |
+| `rate_limited`       | 429    | GitHub or Gemini rate limit                   |
+| `upstream_error`     | 502    | GitHub or Gemini failed                       |
+| `internal_error`     | 500    | Unhandled, or a stub that is not wired up yet |
 
 This contract is shared with the frontend through `@repo/shared/types`, so the
 web client in [apps/web/lib/api.ts](apps/web/lib/api.ts) cannot drift from it.

@@ -162,11 +162,11 @@ None of these have been started.
 
 ## Summary
 
-| Area | Done | Partial | Not started |
-| --- | --- | --- | --- |
-| MVP functional (7) | 1 | 4 | 2 |
-| Future scope (13) | 0 | 0 | 13 |
-| Non-functional (21) | 9 | 8 | 4 |
+| Area                | Done | Partial | Not started |
+| ------------------- | ---- | ------- | ----------- |
+| MVP functional (7)  | 1    | 4       | 2           |
+| Future scope (13)   | 0    | 0       | 13          |
+| Non-functional (21) | 9    | 8       | 4           |
 
 ### Things to fix in the list itself
 

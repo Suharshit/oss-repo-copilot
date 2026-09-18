@@ -6,3 +6,7 @@ pnpm-lock.yaml
 
 # Leftover create-turbo clone — not part of this workspace
 .turbo-clone-temp
+
+# Vendored agent skills (managed via skills-lock.json)
+.agents
+.claude

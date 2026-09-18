@@ -58,6 +58,8 @@ pnpm dev --filter=api
 | `pnpm lint`        | ESLint across every package                                |
 | `pnpm check-types` | `tsc --noEmit` across every package                        |
 | `pnpm format`      | Prettier                                                   |
+| `pnpm test`        | Unit tests in `apps/api` and `packages/shared`             |
+| `pnpm verify`      | format check, lint, typecheck, test, build — same as CI    |
 
 Requires Node >= 24 and pnpm 11.
 
@@ -74,9 +76,10 @@ Every table is deny-all: RLS on with zero policies, and no grants to `anon` or
 
 ## CI
 
-[.github/workflows/ci.yml](./.github/workflows/ci.yml) runs `lint`,
-`check-types` and `build` on every push and pull request. The pnpm version comes
-from the `packageManager` field, so CI and local development cannot drift.
+[.github/workflows/ci.yml](./.github/workflows/ci.yml) runs on every pull
+request and every push to `main`: format check, lint, typecheck, test and build,
+plus a job that applies all Supabase migrations to a fresh Postgres and lints
+the schema. Run `pnpm verify` before pushing to catch the same failures locally.
 
 ## Testing the API
 
@@ -114,3 +117,8 @@ creation and env var entry need a login), pointing it at this repo with:
 Workers alike, and no handler is committed for any of them. Serverless is fine
 for what exists today, but repo cloning and indexing may outgrow function
 execution limits — so the choice stays open until that work lands.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch and commit conventions and
+the pre-push checklist.
