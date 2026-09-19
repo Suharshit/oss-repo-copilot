@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { issueUrl } from "@repo/shared/utils";
-import { Section } from "../../../../../../components/common/section";
-import { RepoHeader } from "../../../../../../components/repo/repo-header";
+import { BriefView } from "../../../../../../components/brief/brief-view";
 import {
   parseIssueNumber,
   parseRepoParams,
@@ -11,9 +9,9 @@ import {
 } from "../../../../../../lib/routes";
 
 /**
- * An issue's page, /r/[owner]/[name]/issues/[number]. Rows in the issue list
- * link here. For now it's a placeholder; the contribution brief (US-3) will
- * render here next.
+ * An issue's page, /r/[owner]/[name]/issues/[number], showing its contribution
+ * brief (US-3). Rows in the issue list link here, and so does an issue URL
+ * pasted on the landing page.
  */
 export default async function IssuePage({
   params,
@@ -33,22 +31,11 @@ export default async function IssuePage({
           ← All issues
         </Link>
 
-        <RepoHeader repo={ref} />
-
-        <Section title={`Issue #${number}`}>
-          <p className="text-[0.9375rem]/[1.55] text-muted-foreground">
-            Contribution briefs are on the way. Soon this page will show the
-            files to look at and a suggested approach for this issue.
-          </p>
-          <a
-            className="w-fit text-sm hover:underline"
-            href={issueUrl({ ...ref, number })}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read #{number} on GitHub ↗
-          </a>
-        </Section>
+        {/* Keyed so moving between issues starts from a clean loading state. */}
+        <BriefView
+          key={`${ref.owner}/${ref.name}#${number}`}
+          issueRef={{ ...ref, number }}
+        />
       </main>
     </div>
   );
@@ -64,5 +51,6 @@ export async function generateMetadata({
 
   return {
     title: `#${number} · ${ref.owner}/${ref.name} · repo-onboarding-copilot`,
+    description: `Which files to look at and how to approach issue #${number} in ${ref.owner}/${ref.name}.`,
   };
 }

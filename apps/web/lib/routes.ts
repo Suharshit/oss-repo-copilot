@@ -17,7 +17,7 @@ export function repoPagePath(
   return tab === "overview" ? path : `${path}?tab=${tab}`;
 }
 
-/** An issue's page on a repo, where its contribution brief will live (US-3). */
+/** An issue's page on a repo, where its contribution brief lives (US-3). */
 export function issuePagePath(ref: RepoRef, number: number): string {
   return `${repoPagePath(ref)}/issues/${number}`;
 }
