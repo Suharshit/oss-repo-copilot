@@ -27,12 +27,13 @@ Source: `Oss-Repo-Copilot-feature-list.pdf`, checked against the codebase on 202
   - Missing: the web UI. `looksClaimed()` (claim phrases in comments) exists but isn't used, because comments aren't fetched. The `issues` table is never written to.
 
 - [x] **Contribution brief generation** (paste an issue URL, get relevant files, what needs to change and a suggested approach). **Partial** · Fit ✅
-  - Done: `POST /v1/brief` fetches the issue by number, reads the repo context and CONTRIBUTING.md, and returns `relevantFiles`, `suggestedApproach` and `conventionsNotes`. File paths are checked against the real tree.
+  - Done: `POST /v1/brief` fetches the issue by number, reads the repo context and CONTRIBUTING.md, and returns `relevantFiles` and `suggestedApproach`, plus the repo's cached `conventions` (D-22). File paths are checked against the real tree.
   - Missing: the web UI. Briefs aren't saved to `contribution_briefs`, even though the schema says the table is for reviewing output quality. The PDF asks for "a plain-language explanation of what needs to change", but there's no separate field for it: it's folded into `suggestedApproach`.
 
 - [x] **Repo conventions lookup** (CONTRIBUTING rules, branch naming, test/lint requirements, shown in the brief). **Partial** · Fit ✅
   - Done: `generateConventions` pulls out branch naming, test requirements, lint rules and PR template from CONTRIBUTING.md, CODE_OF_CONDUCT.md, ARCHITECTURE.md and the PR template. The result is cached in `repo_conventions`. Each field can be null, so no rules get invented.
-  - Missing: the structured conventions come back with the **overview**, not the brief. The brief only gets a free-text `conventionsNotes` field, built from CONTRIBUTING.md alone. No UI yet.
+  - Done (D-22): `/v1/brief` returns the same cached conventions as the overview, extracting and caching them on a miss. The overview tab shows them.
+  - Missing: the brief page UI.
 
 ### Maintainer-facing
 

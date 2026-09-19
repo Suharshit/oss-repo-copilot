@@ -44,13 +44,16 @@ export interface FriendlinessSignals {
   claimed: boolean;
 }
 
-/** Fresh-per-request LLM artifact answering "what do I actually change?" (US-3). */
+/**
+ * Fresh-per-request LLM artifact answering "what do I actually change?" (US-3).
+ * The repo's conventions travel beside it in BriefResponse rather than inside
+ * it: they belong to the repo, not the issue (D-22).
+ */
 export interface ContributionBrief {
   id: string;
   issueId: string;
   relevantFiles: RelevantFile[];
   suggestedApproach: string;
-  conventionsNotes: string;
   generatedAt: string;
 }
 
