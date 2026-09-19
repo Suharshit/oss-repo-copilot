@@ -1,6 +1,6 @@
 import { RepoUrlForm } from "../components/repo-url-form/repo-url-form";
 
-/** Landing page: one repo-URL input. Submitting opens the repo's own page (US-1). */
+/** Landing page: one URL input. A repo opens its own page (US-1), an issue its brief (US-3). */
 export default function Home() {
   return (
     <div className="flex flex-col items-center px-6 pt-24 pb-16">
@@ -11,7 +11,8 @@ export default function Home() {
         <p className="leading-[1.6] text-muted-foreground">
           Paste a public GitHub repository and get an overview of what it does,
           a ranked list of approachable open issues, and a brief telling you
-          which files to touch.
+          which files to touch. Already have an issue in mind? Paste its URL to
+          go straight to the brief.
         </p>
 
         <RepoUrlForm />

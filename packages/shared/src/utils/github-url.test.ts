@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   issueId,
   issueUrl,
+  parseGithubUrl,
   parseIssueUrl,
   parseRepoUrl,
   repoId,
@@ -77,6 +78,47 @@ describe("parseIssueUrl", () => {
     ]) {
       assert.equal(parseIssueUrl(input), null, `should reject: ${input}`);
     }
+  });
+});
+
+describe("parseGithubUrl", () => {
+  const repo = { owner: "honojs", name: "hono" };
+
+  it("reads an issue URL as the issue, not its repo", () => {
+    assert.deepEqual(
+      parseGithubUrl("https://github.com/honojs/hono/issues/5313"),
+      { kind: "issue", ref: { ...repo, number: 5313 } },
+    );
+  });
+
+  it("tells a pull request apart from an issue", () => {
+    assert.deepEqual(parseGithubUrl("github.com/honojs/hono/pull/42/files"), {
+      kind: "pull",
+      ref: { ...repo, number: 42 },
+    });
+  });
+
+  it("reads anything else under a repo as the repo", () => {
+    for (const input of [
+      "https://github.com/honojs/hono",
+      "https://github.com/honojs/hono/issues",
+      "https://github.com/honojs/hono/blob/main/README.md",
+      "https://github.com/honojs/hono/discussions/12",
+    ]) {
+      assert.deepEqual(
+        parseGithubUrl(input),
+        { kind: "repo", ref: repo },
+        `failed on: ${input}`,
+      );
+    }
+  });
+
+  it("rejects what is not a GitHub URL", () => {
+    assert.equal(
+      parseGithubUrl("https://gitlab.com/honojs/hono/issues/1"),
+      null,
+    );
+    assert.equal(parseGithubUrl(""), null);
   });
 });
 
