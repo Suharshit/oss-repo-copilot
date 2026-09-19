@@ -1,32 +1,65 @@
 # Active Context
 
-**Last updated:** 2026-09-18
+**Last updated:** 2026-09-19
 
 ## Current status
 
-The API side of the MVP is built: every route works against live GitHub and
-Gemini, and overviews are cached in Supabase. The web app has a real repo page
-with two tabs, **Overview** (US-1) and **Issues** (US-2). The brief page
-(US-3) is the next feature, and its route already exists as a placeholder.
+The MVP's three user-facing features are built end to end: the repo page has
+**Overview** (US-1) and **Issues** (US-2) tabs, and each issue opens its
+**contribution brief** (US-3) with the repo's conventions (US-4) beside it.
 
-Working through [`ToDo.md`](./ToDo.md): items 1 (overview page) and 2 (issue
-list) are done; 3 (brief page) is next.
+Working through [`ToDo.md`](./ToDo.md): items 1 (overview page), 2 (issue
+list) and 3 (brief page, branch `feat/brief-page`) are done; 4 (test with real
+repos and tune) is next.
+
+> **The Supabase project `OSS-Repo-Copilot` is paused (INACTIVE)** as of
+> 2026-09-19; its hostname no longer resolves. The API runs in its no-cache
+> mode and logs a failed read/write per request. The org is at the free
+> tier's two-active-project limit (Vibely, draftly), so restoring it means
+> pausing one of those.
 
 ### What works right now
 
-| Piece                                | State                                                                                      |
-| ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `GET /health`                        | working                                                                                    |
-| `POST /v1/overview`                  | working: Gemini generation, cached in Supabase for 7 days, `refresh: true` skips the cache |
-| `GET /v1/issues`                     | working: queries `good first issue`, falls back to recent open issues, slim rows (below)   |
-| `POST /v1/brief`                     | working: generates a brief, but it is **not saved** and nothing in the UI calls it yet     |
-| Rate limiting                        | per client IP, two tiers (`GENERATION_RATE_LIMIT`, `READ_RATE_LIMIT`)                      |
-| Landing page `/`                     | repo URL form, routes to the repo page                                                     |
-| Repo page `/r/[owner]/[name]`        | header + Overview / Issues tabs; `?tab=issues` opens the second                            |
-| Issue page `/r/[o]/[n]/issues/[num]` | **placeholder**: links to GitHub and back to the list; the brief goes here (ToDo 3)        |
-| Supabase                             | 5 tables, deny-all RLS; `repos`, `repo_overviews`, `repo_conventions` are written          |
-| Tests                                | 50 (`node:test` via `tsx`): shared pure functions + `apps/api` GitHub service              |
-| CI                                   | `pnpm verify` order: format → lint → check-types → test → build, plus a Supabase lint job  |
+| Piece                                | State                                                                                            |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `GET /health`                        | working                                                                                          |
+| `POST /v1/overview`                  | working: Gemini generation, cached in Supabase for 7 days, `refresh: true` skips the cache       |
+| `GET /v1/issues`                     | working: queries `good first issue`, falls back to recent open issues, slim rows (below)         |
+| `POST /v1/brief`                     | working: ranked tree + docs, cached conventions (D-22), recorded in `contribution_briefs` (D-20) |
+| Rate limiting                        | per client IP, two tiers (`GENERATION_RATE_LIMIT`, `READ_RATE_LIMIT`)                            |
+| Landing page `/`                     | one URL form: a repo URL opens the repo page, an issue URL its brief, a PR URL is refused inline |
+| Repo page `/r/[owner]/[name]`        | header + Overview / Issues tabs; `?tab=issues` opens the second                                  |
+| Issue page `/r/[o]/[n]/issues/[num]` | the brief: issue card, files to look at, suggested approach, conventions, Regenerate             |
+| Supabase                             | 5 tables, deny-all RLS, all written; **project currently paused** (above)                        |
+| Tests                                | 80 (`node:test` via `tsx`): 54 shared, 26 api (GitHub service, db writes, `/v1/brief` route)     |
+| CI                                   | `pnpm verify` order: format → lint → check-types → test → build, plus a Supabase lint job        |
+
+### Brief page (ToDo 3), as built
+
+- **Conventions (D-22).** Not generated per brief any more. `BriefResponse`
+  carries the same `RepoConventions` row the overview caches; on a miss
+  `/v1/brief` extracts them in parallel with the brief and writes the row.
+  The brief prompt gets the cached rules (raw CONTRIBUTING.md on a miss).
+- **Context.** `fetchBriefContext` reads the whole, uncapped tree plus the
+  contribution docs, no README or manifests. `rankPathsForIssue` (shared)
+  orders the tree by word overlap with the issue before the prompt's 800-path
+  cut; a named path wins outright, and words matching over 10% of the tree
+  (usually the project's name) are ignored. On microsoft/vscode this moved
+  the file an issue named from outside the 800 to first.
+- **Recording (D-20).** `upsertIssue` then `writeBrief`, insert only, never
+  read. Unverified live because Supabase is paused; covered by `db.test.ts`.
+- **Errors.** 5xx `HttpError`s are logged with their cause in `onError`.
+- **Web.** `useContributionBrief` shares an in-flight request per issue URL,
+  so dev-mode double mounting costs one generation, not two (checked via
+  `RateLimit-Remaining`). `components/brief/`: `BriefView` (owns the header
+  and Regenerate), `IssueCard` (closed warning), `RelevantFilesSection`
+  (links into the default branch), `ApproachSection`, `BriefSkeleton`; the
+  overview's `ConventionsSection` is reused. Not-found errors read
+  "Couldn't find that issue" with the API's message.
+- **Landing.** `parseGithubUrl` (shared) sorts a URL into repo, issue or pull
+  request. Before, `parseRepoUrl` read an issue URL as its repo.
+- `formatRelativeTime` says "just now" under a minute, including a few
+  seconds in the future (server clock ahead of the browser's).
 
 ### Issue list (ToDo 2), as built
 
@@ -76,16 +109,24 @@ list) are done; 3 (brief page) is next.
 4. **The fallback list is thin on busy repos.** PRs take up slots in GitHub's
    50-item page and are filtered out afterwards (rust-lang/rust: 13 issues out
    of 50).
-5. **Nothing is cached for issues or briefs.** The `issues` and
-   `contribution_briefs` tables are never written to (ToDo 4).
+5. **The issue list isn't cached.** Briefs are recorded but never read
+   (D-06, D-20), and `issues` rows are only written by the brief.
 6. **No Docker installed**, so the local Supabase stack can't run. The remote
    project is the only working database.
 7. **Nothing is deployed.** The API target is still open (OQ-4), and the web
    Vercel project hasn't been created.
-8. `backend-review.md` and `features-list.md` predate the overview and issue
-   pages, and parts of them are stale.
+8. **Supabase is paused** (see Current status). Every cache read misses, so
+   every overview visit pays for two generations.
 
 ## Recent activities
+
+### Brief page, ToDo 3 (2026-09-19, branch `feat/brief-page`)
+
+One commit per step: conventions beside the brief (D-22); tree ranking,
+slimmer fetch and 5xx logging; the brief page; issue URLs on the landing
+page; brief recording; tests and docs. Verified with `pnpm verify` and in
+headless Chrome against live GitHub and Gemini (desktop, 520px, light and
+dark, PR URL, closed issue, the landing form driven over CDP).
 
 ### Issue list, ToDo 2 (2026-09-18, branch `feat/issue-list`)
 
@@ -119,13 +160,11 @@ pure functions.
 
 ## Next steps
 
-1. **Brief page (ToDo 3).** Swap the placeholder at
-   `app/r/[owner]/[name]/issues/[number]` for a real brief view calling
-   `getContributionBrief`, and add issue-URL paste on the landing page.
-   Decide whether conventions belong in the brief.
+1. **Decide on Supabase:** restore `OSS-Repo-Copilot` (pausing another
+   project) or move to a paid org. Then confirm the brief rows land.
 2. **Test with real repos and tune (ToDo 4).** Scoring (assignment penalty,
-   label spellings), prompts, the double `fetchRepo`, saving briefs, caching,
-   and logging upstream errors.
+   label spellings), prompts, path ranking, the double `fetchRepo`, a timeout
+   on Supabase calls, and a Gemini 503 retry.
 3. README badge (ToDo 5), then launch hardening (ToDo 6).
 
 ## Pointers

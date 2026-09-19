@@ -76,4 +76,27 @@ describe("formatRelativeTime", () => {
   it("says so rather than throwing on an unparseable date", () => {
     assert.equal(formatRelativeTime("not a date", now), "unknown");
   });
+
+  it("says just now for the last minute", () => {
+    assert.equal(
+      formatRelativeTime("2026-01-10T11:59:30.000Z", now),
+      "just now",
+    );
+  });
+
+  it("says just now when the server's clock runs ahead of ours", () => {
+    // A brief stamped by the API a few seconds "in the future" must not
+    // read "in 4 seconds".
+    assert.equal(
+      formatRelativeTime("2026-01-10T12:00:04.000Z", now),
+      "just now",
+    );
+  });
+
+  it("counts minutes once a minute has passed", () => {
+    assert.equal(
+      formatRelativeTime("2026-01-10T11:58:00.000Z", now),
+      "2 minutes ago",
+    );
+  });
 });

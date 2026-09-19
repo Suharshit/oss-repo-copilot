@@ -8,13 +8,17 @@ export function formatRelativeTime(
   if (Number.isNaN(then)) return "unknown";
 
   const seconds = Math.round((then - now.getTime()) / 1000);
+  // Every caller shows a past moment. Something from the last minute, or a
+  // few seconds "ahead" because the server's clock leads the browser's,
+  // would otherwise read "in 4 seconds".
+  if (seconds > -60) return "just now";
+
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
     ["year", 31_536_000],
     ["month", 2_592_000],
     ["week", 604_800],
     ["day", 86_400],
     ["hour", 3600],
-    ["minute", 60],
   ];
 
   const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
@@ -23,7 +27,7 @@ export function formatRelativeTime(
       return formatter.format(Math.round(seconds / secondsPerUnit), unit);
     }
   }
-  return formatter.format(seconds, "second");
+  return formatter.format(Math.round(seconds / 60), "minute");
 }
 
 export function truncate(text: string, maxLength: number): string {

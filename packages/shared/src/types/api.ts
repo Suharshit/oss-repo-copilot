@@ -62,6 +62,11 @@ export interface BriefResponse {
   repo: Repo;
   issue: Issue;
   brief: ContributionBrief;
+  /**
+   * The same conventions the overview shows, from the same cache row, so the
+   * two pages can't disagree (D-22). null when the repo documents none.
+   */
+  conventions: RepoConventions | null;
 }
 
 export interface HealthResponse {

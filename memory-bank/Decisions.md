@@ -276,6 +276,34 @@ in the same change.
 
 ---
 
+## Brief decisions (ToDo 3, 2026-09-19)
+
+### D-22 — Conventions sit beside the brief, not inside it
+
+**Status:** accepted
+
+The brief used to ask the model for a free-text `conventionsNotes`, read from
+CONTRIBUTING.md alone, on every request. The overview already extracts
+structured `RepoConventions` from _all_ contribution docs (PR template, code
+of conduct and the rest) and caches them for 7 days. So the same repo got two
+answers to the same question, and the brief page and the overview tab could
+disagree.
+
+Conventions belong to the repo, not the issue. So `ContributionBrief` no
+longer has a conventions field, and `BriefResponse` carries
+`conventions: RepoConventions | null` from the same `repo_conventions` row the
+overview reads. On a cache miss, `/v1/brief` extracts them in parallel with
+the brief and writes the row, so the next overview visit gets a cache hit.
+
+The model still sees the rules: the cached conventions go into the brief
+prompt (the raw CONTRIBUTING.md on a miss), so the suggested approach can say
+where tests go.
+
+**Consequence:** `contribution_briefs.conventions_notes` (nullable) is left
+unwritten. The web brief page reuses `ConventionsSection` as it is.
+
+---
+
 ## Open questions
 
 Carried from `spec.md` §7 — unresolved, and each one blocks or shapes work.

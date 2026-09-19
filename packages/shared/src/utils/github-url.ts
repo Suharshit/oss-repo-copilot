@@ -40,6 +40,28 @@ export function parseIssueUrl(input: string): IssueRef | null {
   return repo ? { ...repo, number } : null;
 }
 
+/** What a pasted GitHub URL points at, as far as the landing page cares. */
+export type GithubTarget =
+  | { kind: "repo"; ref: RepoRef }
+  | { kind: "issue"; ref: IssueRef }
+  | { kind: "pull"; ref: IssueRef };
+
+/**
+ * Sort a pasted URL into a repo, an issue or a pull request, or null when it
+ * is none of them. An issue URL has to be told apart here because
+ * parseRepoUrl accepts deep links and would read it as its repo, and a pull
+ * request because it parses as an issue but has no brief.
+ */
+export function parseGithubUrl(input: string): GithubTarget | null {
+  const issue = parseIssueUrl(input);
+  if (issue) {
+    const kind = githubPathSegments(input)?.[2] === "pull" ? "pull" : "issue";
+    return { kind, ref: issue };
+  }
+  const repo = parseRepoUrl(input);
+  return repo ? { kind: "repo", ref: repo } : null;
+}
+
 export function repoUrl({ owner, name }: RepoRef): string {
   return `${GITHUB_WEB_BASE}/${owner}/${name}`;
 }

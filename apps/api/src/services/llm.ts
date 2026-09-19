@@ -1,4 +1,9 @@
-import { GEMINI_API_BASE, overviewExpiry, truncate } from "@repo/shared";
+import {
+  GEMINI_API_BASE,
+  overviewExpiry,
+  rankPathsForIssue,
+  truncate,
+} from "@repo/shared";
 import type {
   ContributionBrief,
   Issue,
@@ -29,7 +34,15 @@ export interface OverviewInput {
 export interface BriefInput {
   repo: Repo;
   issue: Issue;
+  /** The whole tree: ranked against the issue, then cut down, in the prompt. */
   fileTree: string[];
+  /**
+   * The repo's extracted conventions, when the cache has them. Preferred over
+   * `contributing`: it is shorter, and it is what the page shows beside the
+   * brief, so the approach can't contradict it (D-22).
+   */
+  conventions: RepoConventions | null;
+  /** Raw CONTRIBUTING.md, the fallback when `conventions` is not cached yet. */
   contributing: string | null;
 }
 
@@ -122,21 +135,15 @@ const BRIEF_SCHEMA = {
     suggestedApproach: {
       type: "STRING",
       description:
-        "Plain-language steps a first-time contributor would follow. No code blocks.",
-    },
-    conventionsNotes: {
-      type: "STRING",
-      description:
-        "What this repo expects of a PR (tests, branch naming, lint, sign-off). Say so plainly if the material does not cover it.",
+        "Plain-language steps a first-time contributor would follow. No code blocks. Mention a repo rule only where it changes a step, e.g. where tests go.",
     },
   },
-  required: ["relevantFiles", "suggestedApproach", "conventionsNotes"],
+  required: ["relevantFiles", "suggestedApproach"],
 } as const;
 
 interface BriefPayload {
   relevantFiles: RelevantFile[];
   suggestedApproach: string;
-  conventionsNotes: string;
 }
 
 // Every field is nullable on purpose. Most repos document some of this and
@@ -215,7 +222,6 @@ export const generationService: GenerationService = {
       // no path at all, because a newcomer cannot tell the difference.
       relevantFiles: keepRealPaths(payload.relevantFiles ?? [], input.fileTree),
       suggestedApproach: payload.suggestedApproach,
-      conventionsNotes: payload.conventionsNotes,
       generatedAt: new Date().toISOString(),
     };
   },
@@ -297,7 +303,7 @@ function buildOverviewPrompt(input: OverviewInput): string {
 }
 
 function buildBriefPrompt(input: BriefInput): string {
-  const { repo, issue, fileTree, contributing } = input;
+  const { repo, issue, fileTree, conventions, contributing } = input;
 
   const sections = [
     "You are helping a first-time contributor work out what to change for one GitHub issue.",
@@ -316,7 +322,10 @@ function buildBriefPrompt(input: BriefInput): string {
       : "(The issue has no description.)",
   ];
 
-  if (contributing) {
+  const conventionLines = conventions ? describeConventions(conventions) : [];
+  if (conventionLines.length > 0) {
+    sections.push("", "## Contribution rules", ...conventionLines);
+  } else if (contributing) {
     sections.push(
       "",
       "## CONTRIBUTING",
@@ -325,19 +334,39 @@ function buildBriefPrompt(input: BriefInput): string {
   } else {
     sections.push(
       "",
-      "## CONTRIBUTING",
-      "(This repo has no CONTRIBUTING guide. Do not invent rules for it.)",
+      "## Contribution rules",
+      "(This repo documents none. Do not invent rules for it.)",
     );
   }
 
-  const paths = fileTree.slice(0, PROMPT_LIMITS.treePaths);
+  // Only the head of the tree fits, so the paths sharing words with the issue
+  // go first — otherwise a large repo shows the model whatever sorts first,
+  // and it can't cite a file it was never shown.
+  const issueText = `${issue.title}\n${truncate(issue.body ?? "", PROMPT_LIMITS.issueBodyChars)}`;
+  const paths = rankPathsForIssue(fileTree, issueText).slice(
+    0,
+    PROMPT_LIMITS.treePaths,
+  );
   sections.push(
     "",
-    `## File tree (${paths.length} of ${fileTree.length} paths)`,
+    `## File tree (${paths.length} of ${fileTree.length} paths, those sharing words with the issue first)`,
     paths.join("\n"),
   );
 
   return sections.join("\n");
+}
+
+/** One "- Label: rule" line per stated rule; unstated ones are left out. */
+function describeConventions(conventions: RepoConventions): string[] {
+  const fields: [string, string | null][] = [
+    ["Branch naming", conventions.branchNaming],
+    ["Tests", conventions.testRequirements],
+    ["Lint and formatting", conventions.lintRules],
+    ["Pull requests", conventions.prTemplate],
+  ];
+  return fields.flatMap(([label, value]) =>
+    value ? [`- ${label}: ${value}`] : [],
+  );
 }
 
 function buildConventionsPrompt(input: ConventionsInput): string {

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it, mock } from "node:test";
-import { MAX_MANIFEST_FILES } from "@repo/shared/constants";
+import { MAX_MANIFEST_FILES, MAX_TREE_ENTRIES } from "@repo/shared/constants";
 import {
+  fetchBriefContext,
   fetchScoredIssues,
   selectContributing,
   selectDocPaths,
@@ -228,5 +229,64 @@ describe("fetchScoredIssues", () => {
       issues.map((issue) => issue.number),
       [2, 1],
     );
+  });
+});
+
+/**
+ * A brief reads less than an overview. What it skips is the point: the README
+ * and manifests are most of an overview's requests and the brief uses neither.
+ */
+describe("fetchBriefContext", () => {
+  const ref = { owner: "acme", name: "widgets" };
+
+  function stubGitHub(tree: string[]) {
+    const paths: string[] = [];
+    mock.method(globalThis, "fetch", async (input: string) => {
+      const url = new URL(input);
+      paths.push(url.pathname);
+      if (url.pathname.includes("/git/trees/")) {
+        const body = {
+          tree: tree.map((path) => ({ path, type: "blob" })),
+          truncated: false,
+        };
+        return new Response(JSON.stringify(body), { status: 200 });
+      }
+      return new Response(`contents of ${url.pathname}`, { status: 200 });
+    });
+    return paths;
+  }
+
+  afterEach(() => mock.restoreAll());
+
+  it("fetches the tree and contribution docs, but no README or manifests", async () => {
+    const requested = stubGitHub([
+      "README.md",
+      "CONTRIBUTING.md",
+      "package.json",
+      "src/index.ts",
+    ]);
+
+    const context = await fetchBriefContext(ref, "main");
+
+    assert.deepEqual(Object.keys(context.docs), ["CONTRIBUTING.md"]);
+    assert.deepEqual(requested, [
+      "/repos/acme/widgets/git/trees/main",
+      "/repos/acme/widgets/contents/CONTRIBUTING.md",
+    ]);
+  });
+
+  it("returns the whole tree, past MAX_TREE_ENTRIES", async () => {
+    // The brief ranks the tree against the issue before cutting it down; a
+    // cap here would drop whatever sorts last before ranking saw it.
+    const tree = Array.from(
+      { length: MAX_TREE_ENTRIES + 5 },
+      (_, i) => `src/file-${i}.ts`,
+    );
+    stubGitHub(tree);
+
+    const context = await fetchBriefContext(ref, "main");
+
+    assert.equal(context.fileTree.length, tree.length);
+    assert.equal(context.treeTruncated, false);
   });
 });
