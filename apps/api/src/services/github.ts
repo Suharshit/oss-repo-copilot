@@ -226,6 +226,29 @@ export async function fetchRepoContext(
   };
 }
 
+/** What a brief reads from a repo: less than an overview, and the whole tree. */
+export type BriefContext = Pick<
+  RepoContext,
+  "fileTree" | "docs" | "treeTruncated"
+>;
+
+/**
+ * The read for one brief. A brief never uses the README or manifests, so they
+ * aren't fetched — that is most of fetchRepoContext's requests.
+ *
+ * The tree is NOT capped at MAX_TREE_ENTRIES here. The brief ranks it against
+ * the issue text before its prompt takes a slice, and a cap applied first
+ * would drop whatever sorts last before ranking ever saw it.
+ */
+export async function fetchBriefContext(
+  ref: RepoRef,
+  branch: string,
+): Promise<BriefContext> {
+  const { paths, truncated } = await fetchFileTree(ref, branch);
+  const docs = await fetchDocFiles(ref, paths, branch);
+  return { fileTree: paths, docs, treeTruncated: truncated };
+}
+
 // ---------------------------------------------------------------------------
 // Path selection. Exported because it is pure and worth testing directly.
 // ---------------------------------------------------------------------------

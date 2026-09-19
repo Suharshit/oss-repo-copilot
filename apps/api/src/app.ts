@@ -50,6 +50,16 @@ export function createApp() {
 
   app.onError((error, c) => {
     if (error instanceof HttpError) {
+      // 4xx are the caller's problem and ours to expect (bad URL, unknown
+      // repo, our own rate limit). 5xx mean GitHub or Gemini failed, or we
+      // are misconfigured — the client gets a short message, so the cause
+      // has to land somewhere we can read it.
+      if (error.status >= 500) {
+        console.error(
+          `${c.req.method} ${c.req.path} → ${error.code}: ${error.message}`,
+          ...(error.cause === undefined ? [] : [error.cause]),
+        );
+      }
       return c.json(error.toResponseBody(), error.status);
     }
 

@@ -1,4 +1,9 @@
-import { GEMINI_API_BASE, overviewExpiry, truncate } from "@repo/shared";
+import {
+  GEMINI_API_BASE,
+  overviewExpiry,
+  rankPathsForIssue,
+  truncate,
+} from "@repo/shared";
 import type {
   ContributionBrief,
   Issue,
@@ -29,6 +34,7 @@ export interface OverviewInput {
 export interface BriefInput {
   repo: Repo;
   issue: Issue;
+  /** The whole tree: ranked against the issue, then cut down, in the prompt. */
   fileTree: string[];
   /**
    * The repo's extracted conventions, when the cache has them. Preferred over
@@ -333,10 +339,17 @@ function buildBriefPrompt(input: BriefInput): string {
     );
   }
 
-  const paths = fileTree.slice(0, PROMPT_LIMITS.treePaths);
+  // Only the head of the tree fits, so the paths sharing words with the issue
+  // go first — otherwise a large repo shows the model whatever sorts first,
+  // and it can't cite a file it was never shown.
+  const issueText = `${issue.title}\n${truncate(issue.body ?? "", PROMPT_LIMITS.issueBodyChars)}`;
+  const paths = rankPathsForIssue(fileTree, issueText).slice(
+    0,
+    PROMPT_LIMITS.treePaths,
+  );
   sections.push(
     "",
-    `## File tree (${paths.length} of ${fileTree.length} paths)`,
+    `## File tree (${paths.length} of ${fileTree.length} paths, those sharing words with the issue first)`,
     paths.join("\n"),
   );
 

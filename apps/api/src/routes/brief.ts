@@ -13,9 +13,9 @@ import {
   writeConventions,
 } from "../services/db.js";
 import {
+  fetchBriefContext,
   fetchIssue,
   fetchRepo,
-  fetchRepoContext,
   selectContributing,
 } from "../services/github.js";
 import { generationService } from "../services/llm.js";
@@ -39,7 +39,7 @@ export const briefRoutes = new Hono().post("/", async (c) => {
   const [cache, issue, context] = await Promise.all([
     readCachedConventions(repo),
     fetchIssue(ref, ref.number),
-    fetchRepoContext(ref, repo.defaultBranch),
+    fetchBriefContext(ref, repo.defaultBranch),
   ]);
 
   // Conventions come from the overview's cache row, so the brief page and the
