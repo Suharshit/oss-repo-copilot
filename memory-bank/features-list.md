@@ -18,22 +18,23 @@ Source: `Oss-Repo-Copilot-feature-list.pdf`, checked against the codebase on 202
 
 ### Contributor-facing
 
-- [x] **Repo overview generation** (paste a repo URL, get its purpose, tech stack and main modules). **Partial** · Fit ✅
+- [x] **Repo overview generation** (paste a repo URL, get its purpose, tech stack and main modules). **Done** · Fit ✅
   - Done: `POST /v1/overview` ([apps/api/src/routes/overview.ts](apps/api/src/routes/overview.ts)) reads the file tree, README and manifests, then calls Gemini with a structured schema. Module paths the model made up are dropped.
-  - Missing: the web UI (no input wiring, loading state or overview view).
+  - Done: the Overview tab of `/r/[owner]/[name]`, cached 7 days in Supabase, with Regenerate (`refresh: true`).
 
-- [x] **Good-first-issue matcher** (ranked list of approachable open issues). **Partial** · Fit ✅
+- [x] **Good-first-issue matcher** (ranked list of approachable open issues). **Done** · Fit ✅
   - Done: `GET /v1/issues` scores issues with a deterministic heuristic (`friendlinessScore` in [packages/shared/src/utils/friendliness.ts](packages/shared/src/utils/friendliness.ts)) based on labels, comment count, age and whether someone is assigned. PRs are filtered out. The heuristic has unit tests.
-  - Missing: the web UI. `looksClaimed()` (claim phrases in comments) exists but isn't used, because comments aren't fetched. The `issues` table is never written to.
+  - Done: the Issues tab, with a friendliness badge per row; each row opens the issue's brief.
+  - Missing: `looksClaimed()` (claim phrases in comments) exists but isn't used, because comments aren't fetched. The issue list isn't cached; the `issues` table is only written when a brief is generated.
 
-- [x] **Contribution brief generation** (paste an issue URL, get relevant files, what needs to change and a suggested approach). **Partial** · Fit ✅
-  - Done: `POST /v1/brief` fetches the issue by number, reads the repo context and CONTRIBUTING.md, and returns `relevantFiles` and `suggestedApproach`, plus the repo's cached `conventions` (D-22). File paths are checked against the real tree.
-  - Missing: the web UI. Briefs aren't saved to `contribution_briefs`, even though the schema says the table is for reviewing output quality. The PDF asks for "a plain-language explanation of what needs to change", but there's no separate field for it: it's folded into `suggestedApproach`.
+- [x] **Contribution brief generation** (paste an issue URL, get relevant files, what needs to change and a suggested approach). **Done** · Fit ✅
+  - Done: `POST /v1/brief` fetches the issue by number and the whole file tree plus contribution docs (`fetchBriefContext`), ranks the tree against the issue text (`rankPathsForIssue`) before the prompt's 800-path cut, and returns `relevantFiles` and `suggestedApproach`, plus the repo's cached `conventions` (D-22). File paths are checked against the real tree. Every brief is recorded in `contribution_briefs` (D-20).
+  - Done: the issue page `/r/[owner]/[name]/issues/[number]`, reached from an issue row or by pasting an issue URL on the landing page.
+  - Missing: the PDF asks for "a plain-language explanation of what needs to change", but there's no separate field for it: it's folded into `suggestedApproach`.
 
-- [x] **Repo conventions lookup** (CONTRIBUTING rules, branch naming, test/lint requirements, shown in the brief). **Partial** · Fit ✅
+- [x] **Repo conventions lookup** (CONTRIBUTING rules, branch naming, test/lint requirements, shown in the brief). **Done** · Fit ✅
   - Done: `generateConventions` pulls out branch naming, test requirements, lint rules and PR template from CONTRIBUTING.md, CODE_OF_CONDUCT.md, ARCHITECTURE.md and the PR template. The result is cached in `repo_conventions`. Each field can be null, so no rules get invented.
-  - Done (D-22): `/v1/brief` returns the same cached conventions as the overview, extracting and caching them on a miss. The overview tab shows them.
-  - Missing: the brief page UI.
+  - Done (D-22): `/v1/brief` returns the same cached conventions as the overview, extracting and caching them on a miss. The overview tab and the brief page both show them.
 
 ### Maintainer-facing
 
