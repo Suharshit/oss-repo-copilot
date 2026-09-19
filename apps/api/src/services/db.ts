@@ -1,5 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type {
+  ContributionBrief,
+  Issue,
   Repo,
   RepoConventions,
   RepoModule,
@@ -238,6 +240,79 @@ export async function readConventions(
     prTemplate: data.pr_template,
     sources: data.sources ?? [],
   };
+}
+
+/**
+ * Insert or refresh an issue row, returning its bigint id.
+ *
+ * Unique on (repo_id, number), the same natural key issueId() builds. Only the
+ * brief writes this today, because a brief row needs an issue to point at.
+ * Returns null when the cache is off or the write failed.
+ */
+export async function upsertIssue(
+  repoRowId: number,
+  issue: Issue,
+): Promise<number | null> {
+  const supabase = getClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("issues")
+    .upsert(
+      {
+        repo_id: repoRowId,
+        number: issue.number,
+        title: issue.title,
+        body: issue.body,
+        labels: issue.labels,
+        state: issue.state,
+        comment_count: issue.commentCount,
+        url: issue.url,
+        friendliness_score: issue.friendlinessScore,
+        github_created_at: issue.createdAt,
+        github_updated_at: issue.updatedAt,
+        fetched_at: new Date().toISOString(),
+      },
+      { onConflict: "repo_id,number" },
+    )
+    .select("id")
+    .single<{ id: number }>();
+
+  if (error) {
+    console.error(`cache: could not upsert issue ${issue.id}:`, error.message);
+    return null;
+  }
+  return data.id;
+}
+
+/**
+ * Record a generated brief (D-20).
+ *
+ * An insert, never an upsert: the table is a history of what was generated,
+ * kept to judge output quality over time, and nothing reads it on the request
+ * path — briefs are generated fresh every time (D-06). Errors are logged and
+ * swallowed; the caller already has the brief to return.
+ */
+export async function writeBrief(
+  issueRowId: number,
+  brief: ContributionBrief,
+): Promise<void> {
+  const supabase = getClient();
+  if (!supabase) return;
+
+  const { error } = await supabase.from("contribution_briefs").insert({
+    issue_id: issueRowId,
+    relevant_files: brief.relevantFiles,
+    suggested_approach: brief.suggestedApproach,
+    generated_at: brief.generatedAt,
+  });
+
+  if (error) {
+    console.error(
+      `cache: could not record brief for ${brief.issueId}:`,
+      error.message,
+    );
+  }
 }
 
 /**

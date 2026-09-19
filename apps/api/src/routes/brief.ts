@@ -3,13 +3,17 @@ import { overviewExpiry, parseIssueUrl } from "@repo/shared/utils";
 import type {
   BriefRequest,
   BriefResponse,
+  ContributionBrief,
+  Issue,
   Repo,
   RepoConventions,
 } from "@repo/shared/types";
 import { HttpError, ok } from "../lib/errors.js";
 import {
   readConventions,
+  upsertIssue,
   upsertRepo,
+  writeBrief,
   writeConventions,
 } from "../services/db.js";
 import {
@@ -62,14 +66,21 @@ export const briefRoutes = new Hono().post("/", async (c) => {
       : Promise.resolve(null),
   ]);
 
-  if (fresh && cache.repoRowId !== null) {
+  // Both writes are independent and never throw (db.ts swallows its errors),
+  // so a dead database costs this request nothing but the log line.
+  const { repoRowId } = cache;
+  if (repoRowId !== null) {
     const generatedAt = new Date();
-    await writeConventions(
-      cache.repoRowId,
-      fresh,
-      generatedAt.toISOString(),
-      overviewExpiry(generatedAt),
-    );
+    await Promise.all([
+      fresh &&
+        writeConventions(
+          repoRowId,
+          fresh,
+          generatedAt.toISOString(),
+          overviewExpiry(generatedAt),
+        ),
+      recordBrief(repoRowId, issue, brief),
+    ]);
   }
 
   const response: BriefResponse = {
@@ -89,6 +100,16 @@ async function readCachedConventions(repo: Repo): Promise<{
   const repoRowId = await upsertRepo(repo);
   if (repoRowId === null) return { repoRowId, conventions: null };
   return { repoRowId, conventions: await readConventions(repoRowId, repo.id) };
+}
+
+/** Saves the brief for quality review (D-20). It needs the issue's row first. */
+async function recordBrief(
+  repoRowId: number,
+  issue: Issue,
+  brief: ContributionBrief,
+): Promise<void> {
+  const issueRowId = await upsertIssue(repoRowId, issue);
+  if (issueRowId !== null) await writeBrief(issueRowId, brief);
 }
 
 async function readBody(request: Request): Promise<Partial<BriefRequest>> {
